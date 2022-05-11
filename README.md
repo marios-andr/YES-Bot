@@ -1,6 +1,6 @@
 # Y.E.S. Bot
 
-###Setting Up:
+### Setting Up:
 After cloning project you will need to add a file to the root of the project folder.<br>
 This file must have the name `.env` and contain the following information:<br>
 ```dotenv
