@@ -12,11 +12,11 @@ import org.bson.Document;
 import java.util.HashSet;
 import java.util.List;
 
-public class MongoUser {
+public final class MongoUser {
 
     private static MongoCollection<Document> collection;
 
-    protected static void initialize() {
+    static void initialize() {
         MongoClient mongo = new MongoClient(new MongoClientURI("mongodb+srv://yesbot:" + Config.get("MONGO_PASSWORD") + "@yesbot.hd25z.mongodb.net/admin"));
         MongoDatabase database = mongo.getDatabase("users");
         collection = database.getCollection("users");

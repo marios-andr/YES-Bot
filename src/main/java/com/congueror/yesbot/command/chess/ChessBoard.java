@@ -42,6 +42,7 @@ public class ChessBoard {
     public final String[] userIds;
     //fromX, fromY, toX, toY
     private final int[] lastMove = new int[]{-1, -1, -1, -1};
+    private boolean isSimulation;
 
     public int turn = 0;
 
@@ -106,6 +107,10 @@ public class ChessBoard {
         return board;
     }
 
+    private void setSimulation() {
+        this.isSimulation = true;
+    }
+
     public String getOpponent(String userId) {
         return userIds[0].equals(userId) ? userIds[1] : userIds[0];
     }
@@ -115,10 +120,29 @@ public class ChessBoard {
             CHESS_GAMES.put(uuid, this);
     }
 
+    /**
+     * Gets the position on the board of the simulated position(pos, not startPos) of the given ChessPosition. <br>
+     *
+     * @param pos simulated ChessPosition you wish to get.
+     * @return
+     * @see #getPosAt(int[])
+     */
     @Nullable
     public ChessPosition getPosAt(ChessPosition pos) {
         int[] pos1 = pos.getPos();
-        return board[pos1[0]][pos1[1]];
+        return getPosAt(pos1);
+    }
+
+    /**
+     * Gets the position on the board on the given coordinates.
+     *
+     * @param pos Array of coordinates representing x and y on the board.
+     * @return
+     * @see #getPosAt(ChessPosition)
+     */
+    @Nullable
+    public ChessPosition getPosAt(int[] pos) {
+        return board[pos[0]][pos[1]];
     }
 
     public boolean isTurn(String userId) {
@@ -291,8 +315,10 @@ public class ChessBoard {
             forEach(position -> {
                 if (position != null && position.getPiece().isSameSide(kingPiece)) {
                     ChessPosition.getPossibleMoves().apply(this, position).forEach(p -> {
-                        ChessBoard simulatedBoard = new ChessBoard(this.board, new String[]{});
-                        simulatedBoard.moveInternal(p.left, position, position.getPiece());
+                        ChessBoard simulatedBoard = new ChessBoard(this.board.clone(), new String[]{"simulation0", "simulation1", ""});
+                        simulatedBoard.setSimulation();
+                        simulatedBoard.move(position.getPiece().isWhite() ? "simulation0" : "simulation1", position.getPos().clone(), p.left.clone());
+                        //simulatedBoard.moveInternal(p.left, position, position.getPiece());
                         if (!simulatedBoard.isChecked(king)) {
                             position.checkmateAvoidancePos.add(p.left);
                             canMove.set(true);
@@ -316,6 +342,7 @@ public class ChessBoard {
 
     /**
      * Iterates through every position in the chess board and accepts the given consumer.
+     *
      * @param action A Consumer that takes in the current ChessPosition of the iteration process. <br>
      *               WARNING: Can be nullable.
      */
@@ -342,25 +369,29 @@ public class ChessBoard {
     }
 
     public void initiateWinnerSequence() {
-        String winner = User.fromId(userIds[winnerIndex]).getId();
-        String loser = User.fromId(userIds[winnerIndex == 1 ? 0 : 1]).getId();
-        MongoUser.addChessWin(winner);
-        MongoUser.addChessLoss(loser);
+        if (!isSimulation) {
+            String winner = User.fromId(userIds[winnerIndex]).getId();
+            String loser = User.fromId(userIds[winnerIndex == 1 ? 0 : 1]).getId();
+            MongoUser.addChessWin(winner);
+            MongoUser.addChessLoss(loser);
 
-        CHESS_GAMES.remove(uuid);
+            CHESS_GAMES.remove(uuid);
+        }
     }
 
     public void initiateStalemateSequence() {
-        String user1 = User.fromId(userIds[0]).getId();
-        String user2 = User.fromId(userIds[1]).getId();
-        MongoUser.addChessTie(user1);
-        MongoUser.addChessTie(user2);
+        if (!isSimulation) {
+            String user1 = User.fromId(userIds[0]).getId();
+            String user2 = User.fromId(userIds[1]).getId();
+            MongoUser.addChessTie(user1);
+            MongoUser.addChessTie(user2);
 
-        CHESS_GAMES.remove(uuid);
+            CHESS_GAMES.remove(uuid);
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
-    public File drawBoard() {
+    public File drawBoard(@Nullable int[] drawnMove) {
         ChessBoardType boardType = MongoUser.getSelectedBoard(userIds[0]);
         ChessPieceType pieceType = MongoUser.getSelectedPiece(userIds[0]);
 
@@ -408,6 +439,14 @@ public class ChessBoard {
                                 pos.getPiece().x1, pos.getPiece().y1, pos.getPiece().x2, pos.getPiece().y2, null);
                     }
                 }
+            }
+
+            if (drawnMove != null) {
+                ChessPosition pos = board[drawnMove[0]][drawnMove[1]];
+                ChessPosition.getPossibleMoves().apply(this, pos).forEach(p -> {
+                    a.drawLine(146 * p.left[1] + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146 * 2, 146 * p.left[0] + 146 * 2);
+                    a.drawLine(146 * p.left[1] + 146 + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146, 146 * p.left[0] + 146 * 2);
+                });
             }
 
             a.dispose();

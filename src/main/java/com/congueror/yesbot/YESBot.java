@@ -15,8 +15,11 @@ import java.util.Set;
 
 public class YESBot {
 
+    public static final String SNOWFLAKE_ID = "727830791664697395";
+
     public static void main(String[] args) {
         MongoUser.initialize();
+        RedditUser.initialize();
 
         Reflections reflections = new Reflections("com.congueror.yesbot.command.commands");
 

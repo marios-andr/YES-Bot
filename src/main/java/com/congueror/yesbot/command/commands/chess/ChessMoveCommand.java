@@ -51,7 +51,7 @@ public class ChessMoveCommand implements AbstractCommand {
                             checked = "Checkmate! ";
                         }
                         event.getChannel().sendMessage(checked + User.fromId(game.getOpponent(event.getAuthor().getId())).getAsMention()).queue();
-                        event.getChannel().sendFile(game.drawBoard()).queue();
+                        event.getChannel().sendFile(game.drawBoard(null)).queue();
                     } else if (error == 1) {
                         event.getChannel().sendMessage("You do not own that tile.").reference(reference).queue();
                     } else if (error == 2) {
@@ -108,27 +108,27 @@ public class ChessMoveCommand implements AbstractCommand {
             if (event.getReactionEmote().getEmoji().contains("\u0030")) {
                 game.promote(null);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard()).queue();
+                event.getChannel().sendFile(game.drawBoard(null)).queue();
                 game.finishTurn();
             } else if (event.getReactionEmote().getEmoji().contains("\u0031")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_ROOK : ChessPiece.B_ROOK);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard()).queue();
+                event.getChannel().sendFile(game.drawBoard(null)).queue();
                 game.finishTurn();
             } else if (event.getReactionEmote().getEmoji().contains("\u0032")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_KNIGHT : ChessPiece.B_KNIGHT);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard()).queue();
+                event.getChannel().sendFile(game.drawBoard(null)).queue();
                 game.finishTurn();
             } else if (event.getReactionEmote().getEmoji().contains("\u0033")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_BISHOP : ChessPiece.B_BISHOP);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard()).queue();
+                event.getChannel().sendFile(game.drawBoard(null)).queue();
                 game.finishTurn();
             } else if (event.getReactionEmote().getEmoji().contains("\u0034")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_QUEEN : ChessPiece.B_QUEEN);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard()).queue();
+                event.getChannel().sendFile(game.drawBoard(null)).queue();
                 game.finishTurn();
             }
         }
