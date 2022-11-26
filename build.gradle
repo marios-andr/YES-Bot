@@ -20,12 +20,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'net.dv8tion:JDA:5.0.0-alpha.9'
-    implementation 'org.mongodb:mongo-java-driver:3.12.10'
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.22'
+    implementation 'org.mongodb:mongodb-driver-sync:4.7.1'
     implementation "net.dean.jraw:JRAW:1.1.0"
 
-    implementation 'com.google.code.gson:gson:2.9.0'
-    implementation 'io.github.cdimascio:dotenv-java:2.2.3'
+    //implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.0.0'
+    implementation 'com.google.code.gson:gson:2.10'
+    implementation 'io.github.cdimascio:dotenv-java:2.2.4'
 
     implementation 'org.reflections:reflections:0.10.2'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'

@@ -1,12 +1,12 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 
-public class RNGCommand implements AbstractCommand {
+public class RNGCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
         String[] rng = getInput(event);

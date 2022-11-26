@@ -1,14 +1,14 @@
 package com.congueror.yesbot.command.commands.voice;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.AudioChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.Objects;
 
-public class JoinCommand implements AbstractCommand {
+public class JoinCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
         String[] join = getInput(event);
@@ -28,7 +28,7 @@ public class JoinCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":loud_sound: Voice";
+        return VOICE;
     }
 
     @Override

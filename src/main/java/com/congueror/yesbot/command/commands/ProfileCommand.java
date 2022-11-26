@@ -1,7 +1,7 @@
 package com.congueror.yesbot.command.commands;
 
 import com.congueror.yesbot.MongoUser;
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -10,7 +10,7 @@ import org.bson.Document;
 
 import java.awt.*;
 
-public class ProfileCommand implements AbstractCommand {
+public class ProfileCommand implements Command {
 
     @Override
     public void handle(MessageReceivedEvent event) {
@@ -19,7 +19,7 @@ public class ProfileCommand implements AbstractCommand {
             Message reference = event.getMessage();
             User player;
             if (isMention(reference)) {
-                player = reference.getMentionedMembers().get(0).getUser();
+                player = reference.getMentions().getMembers().get(0).getUser();
             } else {
                 player = reference.getAuthor();
             }
@@ -34,7 +34,7 @@ public class ProfileCommand implements AbstractCommand {
                     continue;
                 embed.addField(a + ":", doc.get(a).toString(), true);
             }
-            event.getChannel().sendMessageEmbeds(embed.build()).reference(reference).queue();
+            event.getChannel().sendMessageEmbeds(embed.build()).setMessageReference(reference).queue();
         }
     }
 

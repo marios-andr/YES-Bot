@@ -7,32 +7,34 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 
-public class MemeCommand implements Command {
+public class RedditCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
-        String[] meme = getInput(event);
-        if (check(meme)) {
+        String[] reddit = getInput(event);
+        if (check(reddit)) {
             Message reference = event.getMessage();
 
-            String[] subreddits = new String[]{"memes", "dankmemes"};
-            sendRandomPost(event, reference, subreddits);
+            if (reddit[1].equals("nsfw"))
+                sendRandomPost(event, reference, "nsfw", "bonermaterial", "iWantToFuckHer", "gonewild", "nudes", "legalteens");
+            else
+                sendRandomPost(event, reference, reddit[1]);
         }
     }
 
     @Override
     public String getName() {
-        return "meme";
+        return "reddit";
     }
 
     @Override
     public String[] getArgs() {
-        return new String[]{};
+        return new String[]{"subreddit"};
     }
 
     @Override
     public String getDescription() {
         ArrayList<String> desc = new ArrayList<>();
-        desc.add("Send a random meme from a meme subreddit");
+        desc.add("Send a random post from a subreddit");
         return StringUtils.join(desc, String.format("%n", ""));
     }
 

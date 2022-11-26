@@ -16,7 +16,13 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Random;
 
-public interface AbstractCommand {
+public interface Command {
+    String UTILITY = ":tools: Utility";
+    String TESTING = ":robot: Testing";
+    String VOICE = ":loud_sound: Voice";
+    String NSFW = ":underage: NSFW";
+    String FUN = ":frog: Fun";
+    String CHESS = ":chess_pawn: Chess";
 
     void handle(MessageReceivedEvent event);
 
@@ -27,7 +33,7 @@ public interface AbstractCommand {
     String getDescription();
 
     default String getCategory() {
-        return ":tools: Utility";
+        return UTILITY;
     }
 
     /**
@@ -60,14 +66,14 @@ public interface AbstractCommand {
     }
 
     default boolean isMention(Message message) {
-        return message.getMentionedMembers().size() >= 1 && message.getMentionedMembers().get(0) != null;
+        return message.getMentions().getMembers().size() >= 1 && message.getMentions().getMembers().get(0) != null;
     }
 
-    static AbstractCommand getCommand(String key) {
+    static Command getCommand(String key) {
         if (key.contains(String.valueOf(BotListenerAdapter.PREFIX))) {
             key = key.substring(1);
         }
-        for (AbstractCommand cmd : BotListenerAdapter.COMMANDS) {
+        for (Command cmd : BotListenerAdapter.COMMANDS) {
             if (cmd.getName().equals(key.toLowerCase())) {
                 return cmd;
             }
@@ -75,12 +81,12 @@ public interface AbstractCommand {
         return null;
     }
 
-    default void sendRandomPost(MessageReceivedEvent event, Message reference, String[] subreddits) {
+    default void sendRandomPost(MessageReceivedEvent event, Message reference, String... subreddits) {
         int rand = new Random().nextInt(0, subreddits.length);
         var post = RedditUser.getRandomSubmission(subreddits[rand]);
 
-        if (post.isNsfw() && !event.getTextChannel().isNSFW()) {
-            event.getChannel().sendMessage("Post was nsfw, but channel is not.").reference(reference).queue();
+        if (post.isNsfw() && !event.getChannel().asTextChannel().isNSFW()) {
+            event.getChannel().sendMessage("Post was nsfw, but channel is not.").setMessageReference(reference).queue();
         } else {
             String sendAfter = "";
             EmbedBuilder embed = new EmbedBuilder();
@@ -113,7 +119,7 @@ public interface AbstractCommand {
             }
             embed.setFooter(post.getCreated().toString());
             embed.setColor(Color.RED);
-            event.getChannel().sendMessageEmbeds(embed.build()).reference(reference).queue();
+            event.getChannel().sendMessageEmbeds(embed.build()).setMessageReference(reference).queue();
             if (!sendAfter.isEmpty() && !sendAfter.isBlank())
                 event.getChannel().sendMessage(sendAfter).queue();
         }

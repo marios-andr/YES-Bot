@@ -101,9 +101,9 @@ public class ChessPosition {
 
     /**
      * @return A BiFunction of the following types: <br>
-     * The current chess game <br>
-     * The position that wants to move <br>
-     * A list of immutable pairs that contains all the possible moves the given position can make and the position to be captured by that movement.
+     * T: The current chess game <br>
+     * U: The position that wants to move <br>
+     * R: A list of immutable pairs that contains all the possible moves the given position can make and the position to be captured by that movement.
      * More Specifically: <br>
      * &emsp Left: Position to move to <br>
      * &emsp Right: Position to be captured + whether king (e.g. new int[] {posX, posY, isKing}) <br>
@@ -231,90 +231,114 @@ public class ChessPosition {
                                                     pos.reset();
                                                     if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
                                                         pos.move(true, Direction.LEFT, Direction.DOWN);
-                                                        int[] left = pos.getPos().clone();
-                                                        pos.move(true, Direction.UP);
-                                                        int[] right = pos.getPos().clone();
-                                                        positions.add(new ImmutablePair<>(left, new int[]{right[0], right[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                                    int[] left = pos.getPos().clone();
+                                                    pos.move(true, Direction.UP);
+                                                    int[] right = pos.getPos().clone();
+                                                    positions.add(new ImmutablePair<>(left, new int[]{right[0], right[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
                                                 }
                                         }
                                 }
                         }
                     pos.reset();
-                    if (board.getPosAt(pos.right(true)) != null) {
-                        pos.reset();
-                        if (board.getPosAt(pos.rightDown(true)) == null) {
+                    if (pos.move(true, Direction.RIGHT))
+                        if (board.getPosAt(pos) != null) {
                             pos.reset();
-                            //noinspection ConstantConditions
-                            if (board.getPosAt(pos.right(true)).getPiece().isPawn()) {
-                                pos.reset();
-                                //noinspection ConstantConditions
-                                if (board.getPosAt(pos.right(true)).getMoves() == 1) {
+                            if (pos.move(true, Direction.RIGHT, Direction.DOWN))
+                                if (board.getPosAt(pos) == null) {
                                     pos.reset();
-                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                                        positions.add(new ImmutablePair<>(pos.rightDown(true).getPos(), new int[]{pos.up(true).getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                    if (pos.move(true, Direction.RIGHT))
+                                        if (board.getPosAt(pos).getPiece().isPawn()) {
+                                            pos.reset();
+                                            if (pos.move(true, Direction.RIGHT))
+                                                if (board.getPosAt(pos).getMoves() == 1) {
+                                                    pos.reset();
+                                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                                        pos.move(true, Direction.RIGHT, Direction.DOWN);
+                                                    int[] left = pos.getPos().clone();
+                                                    pos.move(true, Direction.UP);
+                                                    int[] right = pos.getPos().clone();
+                                                    positions.add(new ImmutablePair<>(left, new int[]{right[0], right[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                                }
+                                        }
                                 }
-                            }
                         }
-                    }
                     pos.reset();
                 }
                 case W_PAWN -> {
                     //move up one and move up two
-                    if (board.getPosAt(pos.up(true)) == null) {
-                        if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                            positions.add(new ImmutablePair<>(pos.getPos(), null));
-                        if (board.getPosAt(pos.up(true)) == null && pos.getMoves() < 1) {
+                    if (pos.move(true, Direction.UP))
+                        if (board.getPosAt(pos) == null) {
                             if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
                                 positions.add(new ImmutablePair<>(pos.getPos(), null));
+                            if (pos.move(true, Direction.UP))
+                                if (board.getPosAt(pos) == null && pos.getMoves() < 1) {
+                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                        positions.add(new ImmutablePair<>(pos.getPos(), null));
+                                }
                         }
-                    }
                     pos.reset();
                     //left up capture
-                    if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos.leftUp(true)))) {
-                        if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                            positions.add(new ImmutablePair<>(pos.getPos(), new int[]{pos.getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
-                    }
+                    if (pos.move(true, Direction.LEFT, Direction.UP))
+                        if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos))) {
+                            if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                positions.add(new ImmutablePair<>(pos.getPos(), new int[]{pos.getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                        }
                     pos.reset();
                     //right up capture
-                    if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos.rightUp(true)))) {
-                        if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                            positions.add(new ImmutablePair<>(pos.getPos(), new int[]{pos.getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
-                    }
+                    if (pos.move(true, Direction.RIGHT, Direction.UP))
+                        if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos))) {
+                            if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                positions.add(new ImmutablePair<>(pos.getPos(), new int[]{pos.getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                        }
                     pos.reset();
                     //en passant capture
-                    if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos.left(true)))) {
-                        pos.reset();
-                        if (board.getPosAt(pos.leftUp(true)) == null) {
+                    if (pos.move(true, Direction.LEFT))
+                        if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos))) {
                             pos.reset();
-                            //noinspection ConstantConditions
-                            if (board.getPosAt(pos.left(true)).getPiece().isPawn()) {
-                                pos.reset();
-                                //noinspection ConstantConditions
-                                if (board.getPosAt(pos.left(true)).getMoves() == 1) {
+                            if (pos.move(true, Direction.LEFT, Direction.UP))
+                                if (board.getPosAt(pos) == null) {
                                     pos.reset();
-                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                                        positions.add(new ImmutablePair<>(pos.leftUp(true).getPos(), new int[]{pos.down(true).getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                    if (pos.move(true, Direction.LEFT))
+                                        if (board.getPosAt(pos).getPiece().isPawn()) {
+                                            pos.reset();
+                                            if (pos.move(true, Direction.LEFT))
+                                                if (board.getPosAt(pos).getMoves() == 1) {
+                                                    pos.reset();
+                                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                                        pos.move(true, Direction.LEFT, Direction.UP);
+                                                    int[] left = pos.getPos().clone();
+                                                    pos.move(true, Direction.DOWN);
+                                                    int[] right = pos.getPos().clone();
+                                                    positions.add(new ImmutablePair<>(left, new int[]{right[0], right[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                                }
+                                        }
                                 }
-                            }
                         }
-                    }
                     pos.reset();
-                    if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos.right(true)))) {
-                        pos.reset();
-                        if (board.getPosAt(pos.rightUp(true)) == null) {
+                    if (pos.move(true, Direction.RIGHT))
+                        if (board.canBeCaptured(pos.getPiece(), board.getPosAt(pos))) {
                             pos.reset();
-                            //noinspection ConstantConditions
-                            if (board.getPosAt(pos.right(true)).getPiece().isPawn()) {
-                                pos.reset();
-                                //noinspection ConstantConditions
-                                if (board.getPosAt(pos.right(true)).getMoves() == 1) {
+                            if (pos.move(true, Direction.RIGHT, Direction.UP))
+                                if (board.getPosAt(pos) == null) {
                                     pos.reset();
-                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
-                                        positions.add(new ImmutablePair<>(pos.rightUp(true).getPos(), new int[]{pos.down(true).getPos()[0], pos.getPos()[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                    //noinspection ConstantConditions
+                                    if (pos.move(true, Direction.RIGHT))
+                                        if (board.getPosAt(pos).getPiece().isPawn()) {
+                                            pos.reset();
+                                            //noinspection ConstantConditions
+                                            if (pos.move(true, Direction.RIGHT))
+                                                if (board.getPosAt(pos).getMoves() == 1) {
+                                                    pos.reset();
+                                                    if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
+                                                        pos.move(true, Direction.RIGHT, Direction.UP);
+                                                    int[] left = pos.getPos().clone();
+                                                    pos.move(true, Direction.DOWN);
+                                                    int[] right = pos.getPos().clone();
+                                                    positions.add(new ImmutablePair<>(left, new int[]{right[0], right[1], board.getPosAt(pos).getPiece().isKing() ? 1 : 0}));
+                                                }
+                                        }
                                 }
-                            }
                         }
-                    }
                     pos.reset();
                 }
             }
@@ -377,14 +401,14 @@ public class ChessPosition {
     }
 
     private static boolean move(ChessBoard board, ChessPosition pos, List<ImmutablePair<int[], int[]>> positions) {
-        int[] kingPosition = new int[]{board.getKingPosition(pos.getPiece().isBlack() ? ChessPiece.W_KING : ChessPiece.B_KING).getPos()[0],
-                board.getKingPosition(pos.getPiece().isBlack() ? ChessPiece.W_KING : ChessPiece.B_KING).getPos()[1]};
+        ChessPosition pdksfg = board.getKingPosition(pos.getPiece().isBlack() ? ChessPiece.W_KING : ChessPiece.B_KING);
+        int[] kingPosition = pdksfg.getPos().clone();
 
-        if (board.getPosAt(pos) == null && !Arrays.equals(kingPosition, pos.getPos())) {
+        ChessPosition boardPos = board.getPosAt(pos);
+        if (boardPos == null && !Arrays.equals(kingPosition, pos.getPos())) {
             if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos()))
                 positions.add(new ImmutablePair<>(pos.getPos(), null));
         } else {
-            ChessPosition boardPos = board.getPosAt(pos);
             if (board.canBeCaptured(pos.getPiece(), boardPos) && (!boardPos.getPiece().isKing() || Arrays.equals(kingPosition, boardPos.getStartPos()))) {
                 if (pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos())) {
                     positions.add(new ImmutablePair<>(pos.getPos(), new int[]{boardPos.getPos()[0], boardPos.getPos()[1],
@@ -408,5 +432,12 @@ public class ChessPosition {
         if (o == null || getClass() != o.getClass()) return false;
         ChessPosition that = (ChessPosition) o;
         return Arrays.equals(pos, that.pos);
+    }
+
+    @Override
+    public String toString() {
+        return piece +
+                ", pos=" + Arrays.toString(pos) +
+                ", startPos=" + Arrays.toString(startPos);
     }
 }

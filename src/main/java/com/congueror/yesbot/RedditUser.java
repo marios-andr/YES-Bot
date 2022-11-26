@@ -16,7 +16,7 @@ public final class RedditUser {
     private static RedditClient reddit;
 
     static void initialize() {
-        UserAgent userAgent = new UserAgent("Y.E.S.", "com.example.usefulbot", "0.1", "congueror");
+        UserAgent userAgent = new UserAgent("Y.E.S.", "net.congueror.yesbot", "0.1", "congueror");
 
         // Create our credentials
         Credentials credentials = Credentials.script(Config.get("REDDIT_USERNAME"), Config.get("REDDIT_PASSWORD"),

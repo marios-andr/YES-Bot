@@ -1,9 +1,9 @@
 package com.congueror.yesbot;
 
-import com.congueror.yesbot.command.AbstractCommand;
-import net.dv8tion.jda.api.entities.AudioChannel;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -16,10 +16,11 @@ import java.util.Objects;
 
 public class BotListenerAdapter extends ListenerAdapter {
     public static boolean shouldStop = false;
-    public static final ArrayList<AbstractCommand> COMMANDS = new ArrayList<>();
-    public static final char PREFIX = '!';
+    public static final ArrayList<Command> COMMANDS = new ArrayList<>();
+    public static final String PREFIX = "!";
 
-    public BotListenerAdapter() {}
+    public BotListenerAdapter() {
+    }
 
     @SuppressWarnings({"ConstantConditions"})
     @Override
@@ -54,26 +55,28 @@ public class BotListenerAdapter extends ListenerAdapter {
 
         //Handle Commands
         String cmd = event.getMessage().getContentRaw().split(" ")[0];
-        if (AbstractCommand.getCommand(cmd.toLowerCase()) != null) {
-            AbstractCommand.getCommand(cmd.toLowerCase()).handle(event);
+        if (Command.getCommand(cmd.toLowerCase()) != null) {
+            Command.getCommand(cmd.toLowerCase()).handle(event);
         }
     }
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        for (AbstractCommand cmd : COMMANDS) {
+        for (Command cmd : COMMANDS) {
             cmd.handleMessageReaction(event);
         }
     }
 
     @Override
-    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
-        AudioChannel memberLeaveVC = event.getChannelLeft();
-        List<Member> members = memberLeaveVC.getMembers();
-        if (members.contains(event.getGuild().getMember(Objects.requireNonNull(event.getJDA().getUserById("727830791664697395"))))) {
-            if (memberLeaveVC.getMembers().toArray().length == 1) {
-                AudioManager audioManager = event.getGuild().getAudioManager();
-                audioManager.closeAudioConnection();
+    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+        if (event.getChannelJoined() == null) {
+            AudioChannel memberLeaveVC = event.getChannelLeft();
+            List<Member> members = memberLeaveVC.getMembers();
+            if (members.contains(event.getGuild().getMember(Objects.requireNonNull(event.getJDA().getUserById("727830791664697395"))))) {
+                if (memberLeaveVC.getMembers().toArray().length == 1) {
+                    AudioManager audioManager = event.getGuild().getAudioManager();
+                    audioManager.closeAudioConnection();
+                }
             }
         }
     }

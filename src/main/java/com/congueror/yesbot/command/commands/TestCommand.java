@@ -1,9 +1,9 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-public class TestCommand implements AbstractCommand {
+public class TestCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
         String[] test = getInput(event);
@@ -15,7 +15,7 @@ public class TestCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":robot: Testing";
+        return TESTING;
     }
 
     @Override

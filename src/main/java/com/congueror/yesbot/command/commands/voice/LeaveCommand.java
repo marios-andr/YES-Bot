@@ -1,12 +1,12 @@
 package com.congueror.yesbot.command.commands.voice;
 
-import com.congueror.yesbot.command.AbstractCommand;
-import net.dv8tion.jda.api.entities.AudioChannel;
+import com.congueror.yesbot.command.Command;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.Objects;
 
-public class LeaveCommand implements AbstractCommand {
+public class LeaveCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
         String[] leave = getInput(event);
@@ -23,7 +23,7 @@ public class LeaveCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":loud_sound: Voice";
+        return VOICE;
     }
 
     @Override

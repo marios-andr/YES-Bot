@@ -1,10 +1,10 @@
 package com.congueror.yesbot.command.commands.fun;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-public class CatsCommand implements AbstractCommand {
+public class CatsCommand implements Command {
     @Override
     public void handle(MessageReceivedEvent event) {
         String[] cats = getInput(event);
@@ -33,6 +33,6 @@ public class CatsCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":frog: Fun";
+        return FUN;
     }
 }

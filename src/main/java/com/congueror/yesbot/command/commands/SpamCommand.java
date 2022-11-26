@@ -1,11 +1,11 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import static com.congueror.yesbot.BotListenerAdapter.shouldStop;
 
-public class SpamCommand implements AbstractCommand {
+public class SpamCommand implements Command {
 
     Thread spamThread;
 

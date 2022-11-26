@@ -1,18 +1,20 @@
 package com.congueror.yesbot.command.commands.chess;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.chess.ChessBoard;
 import com.congueror.yesbot.command.chess.ChessPiece;
 import com.congueror.yesbot.command.chess.ChessPosition;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 
-public class ChessMoveCommand implements AbstractCommand {
+public class ChessMoveCommand implements Command {
     private Message message;
     private User mover;
     private ChessBoard game;
@@ -25,7 +27,7 @@ public class ChessMoveCommand implements AbstractCommand {
 
             if (ChessBoard.isInGame(event.getAuthor().getId())) {
                 if (!(move[1].length() >= 4)) {
-                    event.getChannel().sendMessage("What the hell is that?").reference(reference).queue();
+                    event.getChannel().sendMessage("What the hell is that?").setMessageReference(reference).queue();
                 }
 
                 int first = 8 - Integer.parseInt(move[1].substring(1, 2));
@@ -36,7 +38,7 @@ public class ChessMoveCommand implements AbstractCommand {
                 int secondTo = move[1].substring(2, 3).toCharArray()[0] - 97;
                 int[] to = new int[]{firstTo, secondTo};
                 if (!ChessPosition.isInBounds(from) || !ChessPosition.isInBounds(to)) {
-                    event.getChannel().sendMessage("That is an invalid position.").reference(reference).queue();
+                    event.getChannel().sendMessage("That is an invalid position.").setMessageReference(reference).queue();
                 }
 
                 game = ChessBoard.getGame(event.getAuthor().getId());
@@ -51,15 +53,15 @@ public class ChessMoveCommand implements AbstractCommand {
                             checked = "Checkmate! ";
                         }
                         event.getChannel().sendMessage(checked + User.fromId(game.getOpponent(event.getAuthor().getId())).getAsMention()).queue();
-                        event.getChannel().sendFile(game.drawBoard(null)).queue();
+                        event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                     } else if (error == 1) {
-                        event.getChannel().sendMessage("You do not own that tile.").reference(reference).queue();
+                        event.getChannel().sendMessage("You do not own that tile.").setMessageReference(reference).queue();
                     } else if (error == 2) {
-                        event.getChannel().sendMessage("You cannot move that piece there.").reference(reference).queue();
+                        event.getChannel().sendMessage("You cannot move that piece there.").setMessageReference(reference).queue();
                     } else if (error == 3) {
-                        event.getChannel().sendMessage("You are an imposter.").reference(reference).queue();
+                        event.getChannel().sendMessage("You are an imposter.").setMessageReference(reference).queue();
                     } else if (error == 4) {
-                        event.getChannel().sendMessage("Awaiting promotion response from player.").reference(reference).queue();
+                        event.getChannel().sendMessage("Awaiting promotion response from player.").setMessageReference(reference).queue();
                     }
 
                     if (game.winnerIndex == 0 || game.winnerIndex == 1) {
@@ -81,23 +83,23 @@ public class ChessMoveCommand implements AbstractCommand {
                                         2: Knight
                                         3: Bishop
                                         4: Queen
-                                        """).reference(reference)
+                                        """).setMessageReference(reference)
                                 .queue(message -> {
-                                    message.addReaction("\u0030\ufe0f\u20e3").queue();
-                                    message.addReaction("\u0031\ufe0f\u20e3").queue();
-                                    message.addReaction("\u0032\ufe0f\u20e3").queue();
-                                    message.addReaction("\u0033\ufe0f\u20e3").queue();
-                                    message.addReaction("\u0034\ufe0f\u20e3").queue();
+                                    message.addReaction(Emoji.fromFormatted("\u0030\ufe0f\u20e3")).queue();
+                                    message.addReaction(Emoji.fromFormatted("\u0031\ufe0f\u20e3")).queue();
+                                    message.addReaction(Emoji.fromFormatted("\u0032\ufe0f\u20e3")).queue();
+                                    message.addReaction(Emoji.fromFormatted("\u0033\ufe0f\u20e3")).queue();
+                                    message.addReaction(Emoji.fromFormatted("\u0034\ufe0f\u20e3")).queue();
                                     this.message = message;
                                 });
                     } else if (error == 0) {
                         game.finishTurn();
                     }
                 } else {
-                    event.getChannel().sendMessage("It's not your turn!").reference(reference).queue();
+                    event.getChannel().sendMessage("It's not your turn!").setMessageReference(reference).queue();
                 }
             } else {
-                event.getChannel().sendMessage("You're not playing a game.").reference(reference).queue();
+                event.getChannel().sendMessage("You're not playing a game.").setMessageReference(reference).queue();
             }
         }
     }
@@ -105,30 +107,30 @@ public class ChessMoveCommand implements AbstractCommand {
     @Override
     public void handleMessageReaction(MessageReactionAddEvent event) {
         if (isReactionMessage(event, message, mover) && game.requiresPromotion != null) {
-            if (event.getReactionEmote().getEmoji().contains("\u0030")) {
+            if (event.getEmoji().getAsReactionCode().contains("\u0030")) {
                 game.promote(null);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard(null)).queue();
+                event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                 game.finishTurn();
-            } else if (event.getReactionEmote().getEmoji().contains("\u0031")) {
+            } else if (event.getEmoji().getAsReactionCode().contains("\u0031")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_ROOK : ChessPiece.B_ROOK);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard(null)).queue();
+                event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                 game.finishTurn();
-            } else if (event.getReactionEmote().getEmoji().contains("\u0032")) {
+            } else if (event.getEmoji().getAsReactionCode().contains("\u0032")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_KNIGHT : ChessPiece.B_KNIGHT);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard(null)).queue();
+                event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                 game.finishTurn();
-            } else if (event.getReactionEmote().getEmoji().contains("\u0033")) {
+            } else if (event.getEmoji().getAsReactionCode().contains("\u0033")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_BISHOP : ChessPiece.B_BISHOP);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard(null)).queue();
+                event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                 game.finishTurn();
-            } else if (event.getReactionEmote().getEmoji().contains("\u0034")) {
+            } else if (event.getEmoji().getAsReactionCode().contains("\u0034")) {
                 game.promote(game.turn == 0 ? ChessPiece.W_QUEEN : ChessPiece.B_QUEEN);
                 event.getChannel().sendMessage(User.fromId(game.getOpponent(mover.getId())).getAsMention()).queue();
-                event.getChannel().sendFile(game.drawBoard(null)).queue();
+                event.getChannel().sendFiles(FileUpload.fromData(game.drawBoard(null))).queue();
                 game.finishTurn();
             }
         }
@@ -154,6 +156,6 @@ public class ChessMoveCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":robot: Testing";
+        return CHESS;
     }
 }

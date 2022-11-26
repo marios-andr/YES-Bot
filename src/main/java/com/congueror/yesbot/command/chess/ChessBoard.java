@@ -168,7 +168,8 @@ public class ChessBoard {
             forEach(p -> {
                 if (p != null) {
                     if (!p.getPiece().isSameSide(pos.getPiece())) {
-                        for (var a : ChessPosition.getPossibleMoves().apply(this, p)) {
+                        var moves = ChessPosition.getPossibleMoves().apply(this, p);
+                        for (var a : moves) {
                             if (a.right != null && a.right[0] == pos.getPos()[0] && a.right[1] == pos.getPos()[1]) {
                                 checked.set(true);
                             }
@@ -303,6 +304,7 @@ public class ChessBoard {
     private boolean isCheckmate(ChessPiece kingPiece) {
         AtomicBoolean hasMoves = new AtomicBoolean();
         ChessPosition king = getKingPosition(kingPiece);
+
         ChessPosition.getPossibleMoves().apply(this, king).forEach(p -> {
             king.move(p.left, true);
             if (!isChecked(king)) {
@@ -327,7 +329,7 @@ public class ChessBoard {
                 }
             });
         }
-        return !canMove.get() && !hasMoves.get();
+        return !canMove.get() && !hasMoves.get() && isChecked(king);
     }
 
     public ChessPosition getKingPosition(ChessPiece kingColor) {

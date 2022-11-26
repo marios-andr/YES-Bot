@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.commands.fun;
 
-import com.congueror.yesbot.command.AbstractCommand;
+import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class RoastCommand implements AbstractCommand {
+public class RoastCommand implements Command {
 
     @Override
     public void handle(MessageReceivedEvent event) {
@@ -59,6 +59,6 @@ public class RoastCommand implements AbstractCommand {
 
     @Override
     public String getCategory() {
-        return ":frog: Fun";
+        return FUN;
     }
 }
