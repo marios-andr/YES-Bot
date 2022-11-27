@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.congueror.yesbot.command.chess.ChessPiece.*;
@@ -162,21 +163,32 @@ public class ChessBoard {
         return position != null && !piece.isSameSide(position.getPiece());
     }
 
+    /**
+     * Checks if given king position is checked. Specifically: <br>
+     * It iterates through every chess piece on board and determines whether given pos is a target to any.
+     *
+     * @param pos
+     * @return
+     */
     public boolean isChecked(ChessPosition pos) {
         if (pos.getPiece().isKing()) {
             AtomicBoolean checked = new AtomicBoolean();
-            forEach(p -> {
+
+            forEachBreakable((p, b) -> {
                 if (p != null) {
                     if (!p.getPiece().isSameSide(pos.getPiece())) {
                         var moves = ChessPosition.getPossibleMoves().apply(this, p);
                         for (var a : moves) {
                             if (a.right != null && a.right[0] == pos.getPos()[0] && a.right[1] == pos.getPos()[1]) {
                                 checked.set(true);
+                                b.set(true);
+                                break;
                             }
                         }
                     }
                 }
             });
+
             return checked.get();
         }
         return false;
@@ -301,6 +313,14 @@ public class ChessBoard {
         return true;
     }
 
+    /**
+     * Checks whether a king has been checkmated. Specifically: <br>
+     * If king has possible moves which are not checked (hasMoves == true), then false is returned. <br>
+     * If king has no possible moves and is checked, then all friendly piece moves are iterated determining whether the check can be broken. (canMove)
+     *
+     * @param kingPiece
+     * @return
+     */
     private boolean isCheckmate(ChessPiece kingPiece) {
         AtomicBoolean hasMoves = new AtomicBoolean();
         ChessPosition king = getKingPosition(kingPiece);
@@ -353,6 +373,21 @@ public class ChessBoard {
             for (int j = 0; j < getBoard()[i].length; j++) {
                 ChessPosition p = getBoard()[i][j];
                 action.accept(p);
+            }
+        }
+    }
+
+    public void forEachBreakable(BiConsumer<ChessPosition, AtomicBoolean> action) {
+        AtomicBoolean breakz = new AtomicBoolean();
+        hello:
+        {
+            for (int i = 0; i < getBoard().length; i++) {
+                for (int j = 0; j < getBoard()[i].length; j++) {
+                    ChessPosition p = getBoard()[i][j];
+                    action.accept(p, breakz);
+                    if (breakz.get())
+                        break hello;
+                }
             }
         }
     }

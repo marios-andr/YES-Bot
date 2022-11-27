@@ -57,7 +57,6 @@ public class ChessCommand implements Command {
                 } else {
                     event.getChannel().sendFiles(FileUpload.fromData(ChessBoard.newChessBoard(new String[]{player1.getId()}).drawBoard(null))).setMessageReference(reference).queue();
                 }
-
             }
         }
     }
