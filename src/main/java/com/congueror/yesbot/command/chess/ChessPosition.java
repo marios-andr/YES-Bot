@@ -15,7 +15,7 @@ public class ChessPosition {
     private int[] startPos;
 
     /**
-     * Positions which any piece can go to when a king is under heavy attack. Empty when king is under no threat and pieces can move freely.
+     * Positions which any piece can go to when a king is under heavy attack (checked and unable to move). Empty when king is under no threat and pieces can move freely.
      */
     protected final ArrayList<int[]> checkmateAvoidancePos = new ArrayList<>();
 
@@ -125,37 +125,21 @@ public class ChessPosition {
                 case B_ROOK, W_ROOK -> straightMove(board, pos, positions);
                 case B_KNIGHT, W_KNIGHT -> {
                     //up up left
-                    if (pos.move(true, Direction.UP, Direction.UP, Direction.LEFT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.UP, Direction.UP, Direction.LEFT);
                     //up up right
-                    if (pos.move(true, Direction.UP, Direction.UP, Direction.RIGHT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.UP, Direction.UP, Direction.RIGHT);
                     //left left up
-                    if (pos.move(true, Direction.LEFT, Direction.LEFT, Direction.UP))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.LEFT, Direction.LEFT, Direction.UP);
                     //left left down
-                    if (pos.move(true, Direction.LEFT, Direction.LEFT, Direction.DOWN))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.LEFT, Direction.LEFT, Direction.DOWN);
                     //right right up
-                    if (pos.move(true, Direction.RIGHT, Direction.RIGHT, Direction.UP))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.RIGHT, Direction.RIGHT, Direction.UP);
                     //right right down
-                    if (pos.move(true, Direction.RIGHT, Direction.RIGHT, Direction.DOWN))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.RIGHT, Direction.RIGHT, Direction.DOWN);
                     //down down left
-                    if (pos.move(true, Direction.DOWN, Direction.DOWN, Direction.LEFT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.DOWN, Direction.DOWN, Direction.LEFT);
                     //down down right
-                    if (pos.move(true, Direction.DOWN, Direction.DOWN, Direction.RIGHT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.DOWN, Direction.DOWN, Direction.RIGHT);
                 }
                 case B_BISHOP, W_BISHOP -> diagonalMove(board, pos, positions);
                 case B_QUEEN, W_QUEEN -> {
@@ -164,37 +148,42 @@ public class ChessPosition {
                 }
                 case B_KING, W_KING -> {
                     //up
-                    if (pos.move(true, Direction.UP))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.UP);
                     //down
-                    if (pos.move(true, Direction.DOWN))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.DOWN);
                     //left
-                    if (pos.move(true, Direction.LEFT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.LEFT);
                     //right
-                    if (pos.move(true, Direction.RIGHT))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.RIGHT);
                     //left up
-                    if (pos.move(true, Direction.LEFT, Direction.UP))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.LEFT, Direction.UP);
                     //left down
-                    if (pos.move(true, Direction.LEFT, Direction.DOWN))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.LEFT, Direction.DOWN);
                     //right up
-                    if (pos.move(true, Direction.RIGHT, Direction.UP))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.RIGHT, Direction.UP);
                     //right down
-                    if (pos.move(true, Direction.RIGHT, Direction.DOWN))
-                        move(board, pos, positions);
-                    pos.reset();
+                    specificMove(board, pos, positions, Direction.RIGHT, Direction.DOWN);
+                    //castling
+                    if (board.checkedPosition != pos.getPos() && pos.getMoves() == 0) {
+                        var rook = board.getPosAt(new int[]{pos.getPos()[0], pos.getPos()[1] + 3});
+                        if (rook != null && rook.getPiece().isRook() && rook.getMoves() == 0)
+                            if (pos.move(true, Direction.RIGHT) && board.getPosAt(pos) == null && !board.isChecked(pos)) {
+                                if (pos.move(true, Direction.RIGHT) && board.getPosAt(pos) == null && !board.isChecked(pos)) {
+                                    move(board, pos, positions);
+                                    board.castlingPositions.put(ImmutablePair.of(pos.getPos()[0], pos.getPos()[1]), new int[]{rook.getPos()[0], rook.getPos()[1], rook.getPos()[0], rook.getPos()[1] - 2});
+                                }
+                            }
+                        pos.reset();
+
+                        rook = board.getPosAt(new int[]{pos.getPos()[0], pos.getPos()[1] - 4});
+                        if (rook != null && rook.getMoves() == 0)
+                            if (pos.move(true, Direction.LEFT) && board.getPosAt(pos) == null && !board.isChecked(pos))
+                                if (pos.move(true, Direction.LEFT) && board.getPosAt(pos) == null && !board.isChecked(pos)) {
+                                    move(board, pos, positions);
+                                    board.castlingPositions.put(ImmutablePair.of(pos.getPos()[0], pos.getPos()[1]), new int[]{rook.getPos()[0], rook.getPos()[1], rook.getPos()[0], rook.getPos()[1] + 3});
+                                }
+                        pos.reset();
+                    }
                 }
                 case B_PAWN -> {
                     //move down one and move down two
@@ -356,6 +345,12 @@ public class ChessPosition {
 
     private static boolean canAddPos(ChessPosition pos) {
         return pos.checkmateAvoidancePos.isEmpty() || pos.checkmateAvoidancePos.contains(pos.getPos());
+    }
+
+    private static void specificMove(ChessBoard board, ChessPosition pos, List<ImmutablePair<int[], int[]>> positions, Direction... directions) {
+        if (pos.move(true, directions) && (!pos.getPiece().isKing() || !board.isChecked(pos)))
+            move(board, pos, positions);
+        pos.reset();
     }
 
     private static void straightMove(ChessBoard board, ChessPosition pos, List<ImmutablePair<int[], int[]>> positions) {

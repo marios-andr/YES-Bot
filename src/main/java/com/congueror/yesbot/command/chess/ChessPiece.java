@@ -53,4 +53,8 @@ public enum ChessPiece {
     public boolean isKing() {
         return this.equals(W_KING) || this.equals(B_KING);
     }
+
+    public boolean isRook() {
+        return this.equals(W_ROOK) || this.equals(B_ROOK);
+    }
 }

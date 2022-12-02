@@ -6,6 +6,9 @@ import com.congueror.yesbot.command.chess.ChessPosition;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
 
 public class ChessMovesCommand implements Command {
     @Override
@@ -49,7 +52,10 @@ public class ChessMovesCommand implements Command {
 
     @Override
     public String getDescription() {
-        return "Test";
+        ArrayList<String> desc = new ArrayList<>();
+        desc.add("Displays the moves a piece can make.");
+        desc.add("position: The position of the piece, must be written like: \"a2\"");
+        return StringUtils.join(desc, String.format("%n", ""));
     }
 
     @Override

@@ -48,35 +48,42 @@ public class ChessBoard {
     public int turn = 0;
 
     public int[] requiresPromotion;
+    /**
+     * king-position, rook-position: from and to
+     */
+    public HashMap<ImmutablePair<Integer, Integer>, int[]> castlingPositions = new HashMap<>();
     public int[] checkedPosition;
     public int winnerIndex = 3;
     public boolean isStalemate;
 
     public static ChessBoard newChessBoard(String[] userIds) {
-        return new ChessBoard(new ChessPiece[][]
-                {
-                        {B_ROOK, B_KNIGHT, B_BISHOP, B_QUEEN, B_KING, B_BISHOP, B_KNIGHT, B_ROOK},
-                        {B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN},
-                        {null, null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null, null},
-                        {null, null, null, null, null, null, null, null},
-                        {W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN},
-                        {W_ROOK, W_KNIGHT, W_BISHOP, W_QUEEN, W_KING, W_BISHOP, W_KNIGHT, W_ROOK},
-                }, userIds);
+        if (true) {
+            return newTestChessBoard(userIds);
+        } else
+            return new ChessBoard(new ChessPiece[][]
+                    {
+                            {B_ROOK, B_KNIGHT, B_BISHOP, B_QUEEN, B_KING, B_BISHOP, B_KNIGHT, B_ROOK},
+                            {B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN, B_PAWN},
+                            {null, null, null, null, null, null, null, null},
+                            {null, null, null, null, null, null, null, null},
+                            {null, null, null, null, null, null, null, null},
+                            {null, null, null, null, null, null, null, null},
+                            {W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN, W_PAWN},
+                            {W_ROOK, W_KNIGHT, W_BISHOP, W_QUEEN, W_KING, W_BISHOP, W_KNIGHT, W_ROOK},
+                    }, userIds);
     }
 
     public static ChessBoard newTestChessBoard(String[] userIds) {
         return new ChessBoard(new ChessPiece[][]
                 {
-                        {B_KING, B_PAWN, null, null, null, null, null, null},
-                        {B_KNIGHT, null, null, null, null, null, null, null},
-                        {null, W_QUEEN, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, B_KING, null},
+                        {null, null, null, null, null, null, null, null},
+                        {null, null, null, null, null, W_KING, null, null},
                         {null, null, null, null, null, null, null, null},
                         {null, null, null, null, null, null, null, null},
                         {null, null, null, null, null, null, null, null},
-                        {null, W_KING, null, null, null, null, null, null},
                         {null, null, null, null, null, null, null, null},
+                        {W_ROOK, null, null, null, null, null, null, W_ROOK},
                 }, userIds);
     }
 
@@ -143,7 +150,11 @@ public class ChessBoard {
      */
     @Nullable
     public ChessPosition getPosAt(int[] pos) {
-        return board[pos[0]][pos[1]];
+        try {
+            return board[pos[0]][pos[1]];
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public boolean isTurn(String userId) {
@@ -175,11 +186,22 @@ public class ChessBoard {
             AtomicBoolean checked = new AtomicBoolean();
 
             forEachBreakable((p, b) -> {
-                if (p != null) {
-                    if (!p.getPiece().isSameSide(pos.getPiece())) {
+                if (p != null && !p.getPiece().isSameSide(pos.getPiece())) {
+                    if (p.getPiece().isKing()) {
+                        int x1 = pos.getPos()[0], y1 = pos.getPos()[1], x2 = p.getPos()[0], y2 = p.getPos()[1];
+                        double distance = Math.sqrt( Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) );
+                        if (distance < Math.sqrt(4)) {
+                            checked.set(true);
+                            b.set(true);
+                        }
+                    } else {
                         var moves = ChessPosition.getPossibleMoves().apply(this, p);
                         for (var a : moves) {
-                            if (a.right != null && a.right[0] == pos.getPos()[0] && a.right[1] == pos.getPos()[1]) {
+                            if (pos.getPos()[0] == a.left[0] && pos.getPos()[1] == a.left[1]) {
+                                checked.set(true);
+                                b.set(true);
+                                break;
+                            } else if (a.right != null && a.right[0] == pos.getPos()[0] && a.right[1] == pos.getPos()[1]) {
                                 checked.set(true);
                                 b.set(true);
                                 break;
@@ -264,6 +286,15 @@ public class ChessBoard {
         } else if (from.getPiece().isPawn() && from.getPiece().isBlack() && to[0] == 7) {
             requiresPromotion = to;
         }
+
+        //castling
+        var castling = castlingPositions.get(ImmutablePair.of(to[0], to[1]));
+        if (from.getPiece().isKing() && castling != null) {
+            var rook = getPosAt(castling);
+            assert rook != null;
+            move(rook, new int[]{castling[2], castling[3]}, new ImmutablePair<>(null, null));
+        }
+        castlingPositions.clear();
 
         //is checked
         if (isChecked(getKingPosition(W_KING))) {
@@ -481,8 +512,12 @@ public class ChessBoard {
             if (drawnMove != null) {
                 ChessPosition pos = board[drawnMove[0]][drawnMove[1]];
                 ChessPosition.getPossibleMoves().apply(this, pos).forEach(p -> {
-                    a.drawLine(146 * p.left[1] + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146 * 2, 146 * p.left[0] + 146 * 2);
-                    a.drawLine(146 * p.left[1] + 146 + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146, 146 * p.left[0] + 146 * 2);
+                    if (p.right == null) {
+                        a.fillOval(146 * p.left[1] + 146 + 146 / 2 - 146 / 8, 146 * p.left[0] + 146 + 146 / 2 - 146 / 8, 146 / 4, 146 / 4);
+                    } else {
+                        a.drawLine(146 * p.left[1] + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146 * 2, 146 * p.left[0] + 146 * 2);
+                        a.drawLine(146 * p.left[1] + 146 + 146, 146 * p.left[0] + 146, 146 * p.left[1] + 146, 146 * p.left[0] + 146 * 2);
+                    }
                 });
             }
 

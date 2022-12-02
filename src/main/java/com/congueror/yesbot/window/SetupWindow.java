@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.plaf.metal.MetalCheckBoxIcon;
+import javax.swing.plaf.metal.MetalComboBoxIcon;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -202,16 +204,26 @@ public class SetupWindow {
             super();
             this.guild = guild;
 
-            BufferedImage image = null;
-            try {
-                //noinspection ConstantConditions
-                image = ImageIO.read(new URL(guild.getIconUrl()));
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (guild.getIconUrl() != null) {
+                BufferedImage image = null;
+                try {
+                    //noinspection ConstantConditions
+                    image = ImageIO.read(new URL(guild.getIconUrl()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                assert image != null;
+                Icon icon = new ImageIcon(SetupWindow.resize(image, moveWidth, moveHeight));
+                setIcon(icon);
+            } else {
+                BufferedImage image = new BufferedImage(moveWidth, moveHeight, BufferedImage.TYPE_INT_ARGB);
+                var a = image.createGraphics();
+                a.setColor(new Color((float) Math.random(), (float) Math.random(), (float) Math.random(), 1.0f));
+                a.fillRect(0, 0, moveWidth, moveHeight);
+                a.dispose();
+                Icon icon = new ImageIcon(SetupWindow.resize(image, moveWidth, moveHeight));
+                setIcon(icon);
             }
-            assert image != null;
-            Icon icon = new ImageIcon(SetupWindow.resize(image, moveWidth, moveHeight));
-            setIcon(icon);
             setBorderPainted(false);
             setBorder(null);
             setMargin(new Insets(0, 0, 0, 0));

@@ -54,15 +54,14 @@ public class YESBot {
                     .build();
             jda.awaitReady();
 
-            /*
-            if (args.length >= 1 && args[0].equals("createCommands")) {
-                for (Command a : BotListenerAdapter.COMMANDS) {
-                    //TODO: slash commands
-                    //jda.upsertCommand(a.getName(), a.getDescription()).complete();
-                }
-            }*/
-
             SetupWindow.setup(jda.getGuilds());
+
+            if (args.length >= 1 && args[0].equals("--createCommands")) {
+                for (Command a : BotListenerAdapter.COMMANDS) {
+                    jda.upsertCommand(a.getName(), "test").complete();
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
