@@ -3,10 +3,13 @@ package com.congueror.yesbot.command;
 import com.congueror.yesbot.BotListenerAdapter;
 import com.congueror.yesbot.RedditUser;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.managers.AudioManager;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
@@ -14,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Random;
 
 public interface Command {
@@ -65,7 +69,7 @@ public interface Command {
         return message != null && e.getMessageIdLong() == message.getIdLong() && user.equals(e.getUser());
     }
 
-    default boolean isMention(Message message) {
+    default boolean hasMentions(Message message) {
         return message.getMentions().getMembers().size() >= 1 && message.getMentions().getMembers().get(0) != null;
     }
 
@@ -123,5 +127,19 @@ public interface Command {
             if (!sendAfter.isEmpty() && !sendAfter.isBlank())
                 event.getChannel().sendMessage(sendAfter).queue();
         }
+    }
+
+    default AudioChannel joinVC(MessageReceivedEvent event) {
+        if (event.getGuild().getSelfMember().hasPermission(event.getGuildChannel(), Permission.VOICE_CONNECT)) {
+            AudioChannel connectedChannel = Objects.requireNonNull(Objects.requireNonNull(event.getMember()).getVoiceState()).getChannel();
+            if (connectedChannel == null) {
+                event.getChannel().sendMessage("not in channel").queue();
+                return null;
+            }
+            AudioManager audioManager = event.getGuild().getAudioManager();
+            audioManager.openAudioConnection(connectedChannel);
+            return connectedChannel;
+        }
+        return null;
     }
 }

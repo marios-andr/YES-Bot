@@ -3,15 +3,24 @@ package com.congueror.yesbot;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.shop.Shop;
 import com.congueror.yesbot.window.SetupWindow;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 
+import javax.annotation.Nullable;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -65,5 +74,20 @@ public class YESBot {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static JsonObject getJson(String url) {
+        try (InputStream input = new URL(url).openStream()) {
+            InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8);
+            var json = JsonParser.parseReader(reader);
+            return json.getAsJsonObject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static String optionalString(JsonElement element) {
+        return element == null ? null : element.getAsString();
     }
 }

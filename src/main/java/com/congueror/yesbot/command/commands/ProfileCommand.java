@@ -18,7 +18,7 @@ public class ProfileCommand implements Command {
         if (check(profile)) {
             Message reference = event.getMessage();
             User player;
-            if (isMention(reference)) {
+            if (hasMentions(reference)) {
                 player = reference.getMentions().getMembers().get(0).getUser();
             } else {
                 player = reference.getAuthor();

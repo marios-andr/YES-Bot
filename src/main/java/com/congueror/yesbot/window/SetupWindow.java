@@ -3,13 +3,13 @@ package com.congueror.yesbot.window;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.plaf.metal.MetalCheckBoxIcon;
-import javax.swing.plaf.metal.MetalComboBoxIcon;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -20,19 +20,29 @@ public class SetupWindow {
 
     private static JFrame f;
     private static JPanel panel;
-    private static JScrollPane scrollPane;
     private static JComboBox<String> textChannels;
+    private static JComboBox<String> voiceChannels;
+
     private static JTextArea message;
+    private static JScrollPane msgScrollPane;
     private static JButton send;
     private static JComboBox<String> people;
 
-    private static final int moveWidth = 40;
-    private static final int moveHeight = 40;
+    private static JButton join;
+    private static JButton leave;
+    private static JButton mute_all;
+    private static JButton unmute_all;
+
+    //button width, height
+    private static final int bWidth = 40;
+    private static final int bHeight = 40;
 
     @Nullable
     private static Guild selectedGuild;
     @Nullable
-    private static TextChannel selectedChannel;
+    private static TextChannel selectedTextChannel;
+    @Nullable
+    private static VoiceChannel selectedVoiceChannel;
     @Nullable
     private static Member selectedMember;
 
@@ -40,35 +50,37 @@ public class SetupWindow {
         f = new JFrame();
         f.setSize(750, 500);
 
-        message = new JTextArea();
-        message.setBounds(0, 0, 300, 25);
-        message.setEditable(true);
-        message.setLineWrap(true);
-
-        scrollPane = new JScrollPane(message);
-        scrollPane.setBounds(10, 90, 300, 60);
-        scrollPane.setLayout(new ScrollPaneLayout());
-        scrollPane.setVisible(false);
-
         panel = new JPanel();
         panel.setLayout(null);
         panel.setBackground(new Color(0x36393F));
 
         JButton button1 = createMoveButton(true);
-        button1.setBounds(10, 10, moveWidth, moveHeight);
+        button1.setBounds(10, 10, bWidth, bHeight);
         JButton button2 = createMoveButton(false);
-        button2.setBounds(500, 10, moveWidth, moveHeight);
+        button2.setBounds(500, 10, bWidth, bHeight);
 
         for (int i = 0; i < guilds.size(); i++) {
             JButton server = new GuildButton(guilds.get(i));
-            server.setBounds(50 + moveWidth * i, 10, moveWidth, moveHeight);
+            server.setBounds(50 + bWidth * i, 10, bWidth, bHeight);
             panel.add(server);
         }
 
         panel.add(button1);
         panel.add(button2);
 
-        panel.add(scrollPane);
+        //Text Area
+        message = new JTextArea();
+        message.setBounds(0, 0, 300, 25);
+        message.setEditable(true);
+        message.setLineWrap(true);
+
+        msgScrollPane = new JScrollPane(message);
+        msgScrollPane.setBounds(10, 90, 300, 60);
+        msgScrollPane.setLayout(new ScrollPaneLayout());
+        msgScrollPane.setVisible(false);
+
+        panel.add(msgScrollPane);
+
         f.add(panel);
         f.setVisible(true);
     }
@@ -87,7 +99,7 @@ public class SetupWindow {
             textChannels.addActionListener(e -> {
                 if (e.getSource() instanceof JComboBox<?>) {
                     String channel = (String) ((JComboBox<String>) e.getSource()).getSelectedItem();
-                    selectedChannel = channels.stream().filter(s -> s.getName().equals(channel)).findAny().orElse(null);
+                    selectedTextChannel = channels.stream().filter(s -> s.getName().equals(channel)).findAny().orElse(null);
                     updateTextArea();
                 }
             });
@@ -96,16 +108,39 @@ public class SetupWindow {
         }
     }
 
+    private static void updateVoiceChannels() {
+        if (voiceChannels != null) {
+            panel.remove(voiceChannels);
+        }
+        if (selectedGuild != null) {
+            List<VoiceChannel> channels = selectedGuild.getVoiceChannels();
+            voiceChannels = new JComboBox<>();
+            for (VoiceChannel a : channels) {
+                voiceChannels.addItem(a.getName());
+            }
+            voiceChannels.setBounds(260, 60, 250, 25);
+            voiceChannels.addActionListener(e -> {
+                if (e.getSource() instanceof JComboBox<?>) {
+                    String channel = (String) ((JComboBox<String>) e.getSource()).getSelectedItem();
+                    selectedVoiceChannel = channels.stream().filter(s -> s.getName().equals(channel)).findAny().orElse(null);
+                    updateVoiceArea();
+                }
+            });
+            panel.add(voiceChannels);
+            f.repaint();
+        }
+    }
+
     private static void updateTextArea() {
-        scrollPane.setVisible(false);
+        msgScrollPane.setVisible(false);
         if (send != null) {
             panel.remove(send);
         }
         if (people != null) {
             panel.remove(people);
         }
-        if (selectedChannel != null) {
-            scrollPane.setVisible(true);
+        if (selectedTextChannel != null) {
+            msgScrollPane.setVisible(true);
 
             BufferedImage image = null;
             try {
@@ -115,16 +150,16 @@ public class SetupWindow {
                 e.printStackTrace();
             }
             assert image != null;
-            Icon icon = new ImageIcon(resize(image, moveWidth, moveHeight));
+            Icon icon = new ImageIcon(resize(image, bWidth, bHeight));
             send = new JButton(icon);
-            send.setBounds(310, 90, moveWidth, moveHeight);
+            send.setBounds(310, 90, bWidth, bHeight);
             send.setBorderPainted(false);
             send.setBorder(null);
             send.setMargin(new Insets(0, 0, 0, 0));
             send.setContentAreaFilled(false);
             send.addActionListener(e -> {
-                if (selectedChannel != null)
-                    selectedChannel.sendMessage(message.getText()).queue();
+                if (selectedTextChannel != null)
+                    selectedTextChannel.sendMessage(message.getText()).queue();
             });
             panel.add(send);
 
@@ -148,6 +183,109 @@ public class SetupWindow {
         }
     }
 
+    private static void updateVoiceArea() {
+        if (join != null)
+            panel.remove(join);
+
+        if (leave != null)
+            panel.remove(leave);
+
+        if (mute_all != null)
+            panel.remove(mute_all);
+
+        if (unmute_all != null)
+            panel.remove(unmute_all);
+
+        if (selectedVoiceChannel != null) {
+            BufferedImage joinImage = null;
+            BufferedImage leaveImage = null;
+            BufferedImage mute_allImage = null;
+            BufferedImage unmute_allImage = null;
+            try {
+                joinImage = ImageIO.read(SetupWindow.class.getClassLoader().getResource("join.png"));
+                leaveImage = ImageIO.read(SetupWindow.class.getClassLoader().getResource("leave.png"));
+                mute_allImage = ImageIO.read(SetupWindow.class.getClassLoader().getResource("mute_all.png"));
+                unmute_allImage = ImageIO.read(SetupWindow.class.getClassLoader().getResource("unmute_all.png"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            {
+                Icon icon = new ImageIcon(resize(joinImage, bWidth, bHeight));
+                join = new JButton(icon);
+                join.setBounds(10, 175, bWidth, bHeight);
+                join.setBorderPainted(false);
+                join.setBorder(null);
+                join.setMargin(new Insets(0, 0, 0, 0));
+                join.setContentAreaFilled(false);
+                join.addActionListener(e -> {
+                    if (selectedVoiceChannel != null) {
+                        AudioManager audioManager = SetupWindow.selectedGuild.getAudioManager();
+                        audioManager.openAudioConnection(selectedVoiceChannel);
+                    }
+                });
+                panel.add(join);
+            }
+
+            {
+                Icon icon = new ImageIcon(resize(leaveImage, bWidth, bHeight));
+                leave = new JButton(icon);
+                leave.setBounds(50, 175, bWidth, bHeight);
+                leave.setBorderPainted(false);
+                leave.setBorder(null);
+                leave.setMargin(new Insets(0, 0, 0, 0));
+                leave.setContentAreaFilled(false);
+                leave.addActionListener(e -> {
+                    if (selectedVoiceChannel != null) {
+                        AudioManager audioManager = SetupWindow.selectedGuild.getAudioManager();
+                        audioManager.closeAudioConnection();
+                    }
+                });
+                panel.add(leave);
+            }
+
+            {
+                Icon icon = new ImageIcon(resize(mute_allImage, bWidth, bHeight));
+                mute_all = new JButton(icon);
+                mute_all.setBounds(90, 175, bWidth, bHeight);
+                mute_all.setBorderPainted(false);
+                mute_all.setBorder(null);
+                mute_all.setMargin(new Insets(0, 0, 0, 0));
+                mute_all.setContentAreaFilled(false);
+                mute_all.addActionListener(e -> {
+                    if (selectedVoiceChannel != null) {
+                        selectedVoiceChannel.getMembers().forEach(member -> {
+                            if (!member.getUser().isBot())
+                                member.mute(true).queue();
+                        });
+                    }
+                });
+                panel.add(mute_all);
+            }
+
+            {
+                Icon icon = new ImageIcon(resize(unmute_allImage, bWidth, bHeight));
+                unmute_all = new JButton(icon);
+                unmute_all.setBounds(130, 175, bWidth, bHeight);
+                unmute_all.setBorderPainted(false);
+                unmute_all.setBorder(null);
+                unmute_all.setMargin(new Insets(0, 0, 0, 0));
+                unmute_all.setContentAreaFilled(false);
+                unmute_all.addActionListener(e -> {
+                    if (selectedVoiceChannel != null) {
+                        selectedVoiceChannel.getMembers().forEach(member -> {
+                            if (!member.getUser().isBot())
+                                member.mute(false).queue();
+                        });
+                    }
+                });
+                panel.add(unmute_all);
+            }
+
+            f.repaint();
+        }
+    }
+
     private static JButton createMoveButton(boolean mirror) {
         Icon icon = null;
         try {
@@ -155,7 +293,7 @@ public class SetupWindow {
             if (mirror) loc = "move_left.png";
             //noinspection ConstantConditions
             BufferedImage image = ImageIO.read(SetupWindow.class.getClassLoader().getResource(loc));
-            icon = new ImageIcon(resize(image, moveWidth, moveHeight));
+            icon = new ImageIcon(resize(image, bWidth, bHeight));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -213,15 +351,15 @@ public class SetupWindow {
                     e.printStackTrace();
                 }
                 assert image != null;
-                Icon icon = new ImageIcon(SetupWindow.resize(image, moveWidth, moveHeight));
+                Icon icon = new ImageIcon(SetupWindow.resize(image, bWidth, bHeight));
                 setIcon(icon);
             } else {
-                BufferedImage image = new BufferedImage(moveWidth, moveHeight, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage image = new BufferedImage(bWidth, bHeight, BufferedImage.TYPE_INT_ARGB);
                 var a = image.createGraphics();
                 a.setColor(new Color((float) Math.random(), (float) Math.random(), (float) Math.random(), 1.0f));
-                a.fillRect(0, 0, moveWidth, moveHeight);
+                a.fillRect(0, 0, bWidth, bHeight);
                 a.dispose();
-                Icon icon = new ImageIcon(SetupWindow.resize(image, moveWidth, moveHeight));
+                Icon icon = new ImageIcon(SetupWindow.resize(image, bWidth, bHeight));
                 setIcon(icon);
             }
             setBorderPainted(false);
@@ -231,9 +369,12 @@ public class SetupWindow {
             addActionListener(e -> {
                 if (e.getSource() instanceof GuildButton b) {
                     SetupWindow.selectedGuild = b.guild;
-                    SetupWindow.selectedChannel = null;
+                    SetupWindow.selectedTextChannel = null;
+                    SetupWindow.selectedVoiceChannel = null;
                     updateTextChannels();
+                    updateVoiceChannels();
                     updateTextArea();
+                    updateVoiceArea();
                 }
             });
         }

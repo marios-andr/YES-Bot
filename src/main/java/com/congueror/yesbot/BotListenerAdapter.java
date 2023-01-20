@@ -35,9 +35,9 @@ public class BotListenerAdapter extends ListenerAdapter {
         String cases = event.getMessage().getContentRaw();
         if (cases.equalsIgnoreCase("im alone") || cases.equalsIgnoreCase("i'm alone") || cases.equalsIgnoreCase("im lonely") || cases.equalsIgnoreCase("i'm lonely") || cases.equalsIgnoreCase("i am lonely") || cases.equalsIgnoreCase("i am alone")) {
             AudioChannel connectedChannel = event.getMember().getVoiceState().getChannel();
-            if (connectedChannel == null) {
+            if (connectedChannel == null)
                 return;
-            }
+
             AudioManager audioManager = event.getGuild().getAudioManager();
             audioManager.openAudioConnection(connectedChannel);
             event.getChannel().sendMessage("Not anymore!").queue();
