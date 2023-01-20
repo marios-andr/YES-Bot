@@ -12,4 +12,3 @@ REDDIT_PASSWORD=Your_reddit_password
 REST_CLIENT=Your_reddit_api's_client_key
 REST_SECRET=Your_reddit_api's_secret_api_key
 ```
-Note: You can ask owner for the above information, and he will most likely not give them.
