@@ -63,7 +63,7 @@ public class YESBot {
                     .build();
             jda.awaitReady();
 
-            SetupWindow.setup(jda.getGuilds());
+            SetupWindow.setup(jda, jda.getGuilds());
 
             if (args.length >= 1 && args[0].equals("--createCommands")) {
                 for (Command a : BotListenerAdapter.COMMANDS) {

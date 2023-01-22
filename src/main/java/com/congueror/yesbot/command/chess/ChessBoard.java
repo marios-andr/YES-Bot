@@ -57,7 +57,7 @@ public class ChessBoard {
     public boolean isStalemate;
 
     public static ChessBoard newChessBoard(String[] userIds) {
-        if (true) {
+        if (false) {
             return newTestChessBoard(userIds);
         } else
             return new ChessBoard(new ChessPiece[][]

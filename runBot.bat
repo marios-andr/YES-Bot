@@ -1,0 +1,1 @@
+START cmd.exe /k "javaw -jar YES-bot-0.1-all.jar"

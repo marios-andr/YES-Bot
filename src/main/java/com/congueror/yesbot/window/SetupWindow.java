@@ -1,5 +1,7 @@
 package com.congueror.yesbot.window;
 
+import com.congueror.yesbot.BotListenerAdapter;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -10,7 +12,11 @@ import net.dv8tion.jda.api.managers.AudioManager;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.text.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -45,28 +51,85 @@ public class SetupWindow {
     private static VoiceChannel selectedVoiceChannel;
     @Nullable
     private static Member selectedMember;
+    private static int shutdown;
 
-    public static void setup(List<Guild> guilds) {
+    public static void setup(JDA jda, List<Guild> guilds) {
         f = new JFrame();
-        f.setSize(750, 500);
+        f.setTitle("YES Bot");
+        f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        f.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                SystemTray t = SystemTray.getSystemTray();
+                BufferedImage image = null;
+                try {
+                    //noinspection ConstantConditions
+                    image = ImageIO.read(SetupWindow.class.getClassLoader().getResource("send.png"));
+                } catch (IOException e3) {
+                    e3.printStackTrace();
+                }
+                TrayIcon ic = new TrayIcon(image);
+                ic.setImageAutoSize(true);
+                PopupMenu menu = new PopupMenu();
+
+                MenuItem show = new MenuItem("Show");
+                show.addActionListener(e1 -> {
+                    setup(jda, guilds);
+                    t.remove(ic);
+                });
+
+                menu.add(show);
+                ic.setPopupMenu(menu);
+                try {
+                    t.add(ic);
+                } catch (AWTException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        f.setSize(1580, 550);
+
 
         panel = new JPanel();
         panel.setLayout(null);
         panel.setBackground(new Color(0x36393F));
 
-        JButton button1 = createMoveButton(true);
-        button1.setBounds(10, 10, bWidth, bHeight);
-        JButton button2 = createMoveButton(false);
-        button2.setBounds(500, 10, bWidth, bHeight);
+        {
+            JButton b = createMoveButton(true);
+            b.setBounds(10, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            JButton b = createMoveButton(false);
+            b.setBounds(500, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            JButton b = createLockButton(true);
+            b.setBounds(550, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            JButton b = createLockButton(false);
+            b.setBounds(590, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            JButton b = createShutdownButton(jda);
+            b.setBounds(650, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            ConsolePane console = new ConsolePane(800, 450);
+            console.setBounds(750, 10, 800, 450);
+            panel.add(console);
+        }
 
         for (int i = 0; i < guilds.size(); i++) {
             JButton server = new GuildButton(guilds.get(i));
             server.setBounds(50 + bWidth * i, 10, bWidth, bHeight);
             panel.add(server);
         }
-
-        panel.add(button1);
-        panel.add(button2);
 
         //Text Area
         message = new JTextArea();
@@ -324,6 +387,62 @@ public class SetupWindow {
         return button;
     }
 
+    private static JButton createLockButton(boolean lock) {
+        Icon icon = null;
+        try {
+            String loc = "lock_unlock.png";
+            int x = lock ? 202 : 0;
+            //noinspection ConstantConditions
+            BufferedImage image = ImageIO.read(SetupWindow.class.getClassLoader().getResource(loc));
+            icon = new ImageIcon(resize(image.getSubimage(x, 0, 202, 200), bWidth, bHeight));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JButton button = new JButton(icon);
+        button.setBorderPainted(false);
+        button.setBorder(null);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setContentAreaFilled(false);
+        button.addActionListener(e -> BotListenerAdapter.locked = lock);
+
+        return button;
+    }
+
+    private static JButton createShutdownButton(JDA jda) {
+        Icon icon = null;
+        try {
+            String loc = "shutdown.png";
+            //noinspection ConstantConditions
+            BufferedImage image = ImageIO.read(SetupWindow.class.getClassLoader().getResource(loc));
+            icon = new ImageIcon(resize(image, bWidth, bHeight));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JButton button = new JButton(icon);
+        button.setBorderPainted(false);
+        button.setBorder(null);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setContentAreaFilled(false);
+        button.addActionListener(e -> {
+            shutdown++;
+            if (shutdown == 2) {
+                jda.shutdown();
+                System.exit(0);
+            } else {
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    shutdown--;
+                }).start();
+            }
+        });
+
+        return button;
+    }
+
     public static BufferedImage resize(BufferedImage img, int newW, int newH) {
         Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
         BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
@@ -377,6 +496,64 @@ public class SetupWindow {
                     updateVoiceArea();
                 }
             });
+        }
+    }
+
+    public static class ConsolePane extends JPanel {
+        JEditorPane textArea;
+        int userInputStart;
+
+        public ConsolePane(int width, int height) {
+            System.setOut(new CustomPrintStream(System.out, this::appendOut));
+            System.setOut(new CustomPrintStream(System.err, this::appendError));
+            setLayout(new BorderLayout());
+
+            this.textArea = new JEditorPane();
+            this.textArea.setBounds(0, 0, width, height);
+            //((AbstractDocument) this.textArea.getDocument()).setDocumentFilter(new DocumentFilter());
+            this.textArea.setEditable(false);
+            this.textArea.setFont(new Font("Consolas", Font.PLAIN, 16));
+            this.textArea.setForeground(Color.WHITE);
+            this.textArea.setBackground(Color.BLACK);
+            this.textArea.setSelectionColor(Color.WHITE);
+            this.textArea.setVisible(true);
+
+            JScrollPane scrollPane = new JScrollPane(this.textArea);
+            scrollPane.setBounds(0, 0, width, height);
+            scrollPane.setLayout(new ScrollPaneLayout());
+            scrollPane.setVisible(true);
+
+            add(scrollPane);
+
+            setVisible(true);
+        }
+
+        public void appendOut(String text) {
+            var doc = textArea.getDocument();
+            try {
+                doc.insertString(doc.getLength(), text, null);
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+            textArea.setCaretPosition(doc.getLength());
+
+
+            //userInputStart = textArea.getCaretPosition();
+        }
+
+        public void appendError(String text) {
+            SimpleAttributeSet set = new SimpleAttributeSet();
+            set.addAttribute(StyleConstants.Foreground, Color.RED);
+            var doc = textArea.getDocument();
+            try {
+                doc.insertString(doc.getLength(), text, null);
+            } catch (BadLocationException e) {
+                throw new RuntimeException(e);
+            }
+            textArea.setCaretPosition(doc.getLength());
+
+
+            //userInputStart = textArea.getCaretPosition();
         }
     }
 }

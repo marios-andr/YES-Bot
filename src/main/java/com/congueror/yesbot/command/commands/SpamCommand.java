@@ -3,6 +3,7 @@ package com.congueror.yesbot.command.commands;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
+import static com.congueror.yesbot.BotListenerAdapter.locked;
 import static com.congueror.yesbot.BotListenerAdapter.shouldStop;
 
 public class SpamCommand implements Command {
@@ -23,7 +24,7 @@ public class SpamCommand implements Command {
                     @Override
                     public void run() {
                         for (int i = 0; i < 20; i++) {
-                            if (shouldStop) {
+                            if (shouldStop || locked) {
                                 shouldStop = false;
                                 break;
                             }

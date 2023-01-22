@@ -7,14 +7,14 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.congueror.yesbot.YESBot.*;
+import static com.congueror.yesbot.YESBot.getJson;
+import static com.congueror.yesbot.YESBot.optionalString;
 
 public class ChessComCommand implements Command {
     @Override

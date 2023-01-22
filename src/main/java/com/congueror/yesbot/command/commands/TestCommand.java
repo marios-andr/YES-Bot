@@ -9,7 +9,6 @@ public class TestCommand implements Command {
         String[] test = getInput(event);
         if (check(test)) {
             //event.getChannel().sendMessage("Fuck you \u0030\ufe0f\u20e3").queue(message -> message.addReaction("\u0030\ufe0f\u20e3").queue());
-
         }
     }
 

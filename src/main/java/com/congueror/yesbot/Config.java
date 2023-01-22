@@ -6,7 +6,7 @@ import java.util.Locale;
 
 public class Config {
 
-    private static final Dotenv dotenv = Dotenv.load();
+    private static final Dotenv dotenv = Dotenv.configure().directory("/.env").load();
 
     public static String get(String key) {
         return dotenv.get(key.toUpperCase());

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class BotListenerAdapter extends ListenerAdapter {
+    public static boolean locked = false;
     public static boolean shouldStop = false;
     public static final ArrayList<Command> COMMANDS = new ArrayList<>();
     public static final String PREFIX = "!";
@@ -25,11 +26,14 @@ public class BotListenerAdapter extends ListenerAdapter {
     @SuppressWarnings({"ConstantConditions"})
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        System.out.printf("[%s]: %s\n", event.getAuthor().getName(), event.getMessage().getContentDisplay());
+        System.out.printf("[%s | %s]: %s\n", event.getAuthor().getName(), event.getGuild().getName(), event.getMessage().getContentDisplay());
 
         if (event.getAuthor().isBot() && event.isWebhookMessage()) {
             return;
         }
+
+        if (locked)
+            return;
 
         //Secret Commands
         String cases = event.getMessage().getContentRaw();
