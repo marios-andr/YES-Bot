@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.congueror.yesbot.YESBot.getJson;
-import static com.congueror.yesbot.YESBot.optionalString;
+import static com.congueror.yesbot.Constants.getJson;
+import static com.congueror.yesbot.Constants.optionalString;
 
 public class ChessComCommand implements Command {
     @Override

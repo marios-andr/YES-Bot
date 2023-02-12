@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.MongoUser;
+import com.congueror.yesbot.Mongo;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -28,7 +28,7 @@ public class ProfileCommand implements Command {
             embed.setTitle("**__" + player.getAsTag() + "__**");
             embed.setThumbnail(player.getEffectiveAvatarUrl());
             embed.setColor(Color.RED);
-            Document doc = MongoUser.getDocument(player.getId());
+            Document doc = Mongo.getUserDocument(player.getId());
             for (var a : doc.keySet()) {
                 if (a.equals("_id") || a.equals("id"))
                     continue;

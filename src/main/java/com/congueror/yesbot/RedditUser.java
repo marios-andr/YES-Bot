@@ -19,8 +19,8 @@ public final class RedditUser {
         UserAgent userAgent = new UserAgent("Y.E.S.", "net.congueror.yesbot", "0.1", "congueror");
 
         // Create our credentials
-        Credentials credentials = Credentials.script(Config.get("REDDIT_USERNAME"), Config.get("REDDIT_PASSWORD"),
-                Config.get("REST_CLIENT"), Config.get("REST_SECRET"));
+        Credentials credentials = Credentials.script(Constants.getEnv("REDDIT_USERNAME"), Constants.getEnv("REDDIT_PASSWORD"),
+                Constants.getEnv("REST_CLIENT"), Constants.getEnv("REST_SECRET"));
 
         NetworkAdapter adapter = new OkHttpNetworkAdapter(userAgent);
 

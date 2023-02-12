@@ -10,15 +10,10 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class BotListenerAdapter extends ListenerAdapter {
-    public static boolean locked = false;
-    public static boolean shouldStop = false;
-    public static final ArrayList<Command> COMMANDS = new ArrayList<>();
-    public static final String PREFIX = "!";
 
     public BotListenerAdapter() {
     }
@@ -32,7 +27,7 @@ public class BotListenerAdapter extends ListenerAdapter {
             return;
         }
 
-        if (locked)
+        if (Constants.LOCKED)
             return;
 
         //Secret Commands
@@ -51,7 +46,7 @@ public class BotListenerAdapter extends ListenerAdapter {
             event.getChannel().sendMessage("https://tenor.com/view/star-wars-anakin-skywalker-what-have-i-done-confused-sad-gif-3575836").queue();
         }
 
-        if (event.getMessage().getContentRaw().equals("|shutdown") && event.getAuthor().getId().equals(Config.get("owner_id"))) {
+        if (event.getMessage().getContentRaw().equals("|shutdown") && event.getAuthor().getId().equals(Constants.getEnv("owner_id"))) {
             event.getChannel().sendMessage("Shutting down!").queue();
             event.getJDA().shutdown();
             return;
@@ -59,14 +54,14 @@ public class BotListenerAdapter extends ListenerAdapter {
 
         //Handle Commands
         String cmd = event.getMessage().getContentRaw().split(" ")[0];
-        if (Command.getCommand(cmd.toLowerCase()) != null) {
-            Command.getCommand(cmd.toLowerCase()).handle(event);
+        if (Command.getCommand(cmd) != null) {
+            Command.getCommand(cmd).handle(event);
         }
     }
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        for (Command cmd : COMMANDS) {
+        for (Command cmd : Constants.COMMANDS) {
             cmd.handleMessageReaction(event);
         }
     }

@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.chess;
 
-import com.congueror.yesbot.MongoUser;
+import com.congueror.yesbot.Mongo;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 
@@ -440,8 +440,8 @@ public class ChessBoard {
         if (!isSimulation) {
             String winner = User.fromId(userIds[winnerIndex]).getId();
             String loser = User.fromId(userIds[winnerIndex == 1 ? 0 : 1]).getId();
-            MongoUser.addChessWin(winner);
-            MongoUser.addChessLoss(loser);
+            Mongo.addChessWin(winner);
+            Mongo.addChessLoss(loser);
 
             CHESS_GAMES.remove(uuid);
         }
@@ -451,8 +451,8 @@ public class ChessBoard {
         if (!isSimulation) {
             String user1 = User.fromId(userIds[0]).getId();
             String user2 = User.fromId(userIds[1]).getId();
-            MongoUser.addChessTie(user1);
-            MongoUser.addChessTie(user2);
+            Mongo.addChessTie(user1);
+            Mongo.addChessTie(user2);
 
             CHESS_GAMES.remove(uuid);
         }
@@ -460,8 +460,8 @@ public class ChessBoard {
 
     @SuppressWarnings("ConstantConditions")
     public File drawBoard(@Nullable int[] drawnMove) {
-        ChessBoardType boardType = MongoUser.getSelectedBoard(userIds[0]);
-        ChessPieceType pieceType = MongoUser.getSelectedPiece(userIds[0]);
+        ChessBoardType boardType = Mongo.getSelectedBoard(userIds[0]);
+        ChessPieceType pieceType = Mongo.getSelectedPiece(userIds[0]);
 
         try {
 

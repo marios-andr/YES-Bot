@@ -1,6 +1,7 @@
 package com.congueror.yesbot.window;
 
-import com.congueror.yesbot.BotListenerAdapter;
+import com.congueror.yesbot.Constants;
+import com.congueror.yesbot.MessageScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -12,11 +13,12 @@ import net.dv8tion.jda.api.managers.AudioManager;
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.text.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -117,6 +119,11 @@ public class SetupWindow {
         {
             JButton b = createShutdownButton(jda);
             b.setBounds(650, 10, bWidth, bHeight);
+            panel.add(b);
+        }
+        {
+            JButton b = createRefreshButton(jda);
+            b.setBounds(550, 50, bWidth, bHeight);
             panel.add(b);
         }
         {
@@ -403,7 +410,7 @@ public class SetupWindow {
         button.setBorder(null);
         button.setMargin(new Insets(0, 0, 0, 0));
         button.setContentAreaFilled(false);
-        button.addActionListener(e -> BotListenerAdapter.locked = lock);
+        button.addActionListener(e -> Constants.LOCKED = lock);
 
         return button;
     }
@@ -439,6 +446,26 @@ public class SetupWindow {
                 }).start();
             }
         });
+
+        return button;
+    }
+
+    private static JButton createRefreshButton(JDA jda) {
+        Icon icon = null;
+        try {
+            String loc = "refresh.png";
+            //noinspection ConstantConditions
+            BufferedImage image = ImageIO.read(SetupWindow.class.getClassLoader().getResource(loc));
+            icon = new ImageIcon(resize(image, bWidth, bHeight));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        JButton button = new JButton(icon);
+        button.setBorderPainted(false);
+        button.setBorder(null);
+        button.setMargin(new Insets(0, 0, 0, 0));
+        button.setContentAreaFilled(false);
+        button.addActionListener(e -> MessageScheduler.refresh(jda));
 
         return button;
     }

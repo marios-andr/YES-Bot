@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.BotListenerAdapter;
+import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.ListMap;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,7 +20,7 @@ public class HelpCommand implements Command {
             Message reference = event.getMessage();
             EmbedBuilder embed = new EmbedBuilder();
             if (help.length == 1) {
-                ArrayList<Command> commands = new ArrayList<>(BotListenerAdapter.COMMANDS);
+                ArrayList<Command> commands = new ArrayList<>(Constants.COMMANDS);
 
                 embed.setTitle("**__Commands__**");
                 embed.setColor(Color.RED);

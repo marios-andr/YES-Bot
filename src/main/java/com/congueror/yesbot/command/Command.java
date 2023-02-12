@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command;
 
-import com.congueror.yesbot.BotListenerAdapter;
+import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.RedditUser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -44,7 +44,7 @@ public interface Command {
      * Checks whether it is a valid command.
      */
     default boolean check(String[] input) {
-        return input[0].equalsIgnoreCase(BotListenerAdapter.PREFIX + getName());
+        return input[0].equalsIgnoreCase(Constants.PREFIX + getName());
     }
 
     /**
@@ -74,11 +74,11 @@ public interface Command {
     }
 
     static Command getCommand(String key) {
-        if (key.contains(String.valueOf(BotListenerAdapter.PREFIX))) {
+        if (key.contains(String.valueOf(Constants.PREFIX))) {
             key = key.substring(1);
         }
-        for (Command cmd : BotListenerAdapter.COMMANDS) {
-            if (cmd.getName().equals(key.toLowerCase())) {
+        for (Command cmd : Constants.COMMANDS) {
+            if (cmd.getName().equals(key)) {
                 return cmd;
             }
         }
