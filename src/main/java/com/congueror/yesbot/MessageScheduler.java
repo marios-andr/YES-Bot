@@ -1,5 +1,6 @@
 package com.congueror.yesbot;
 
+import com.congueror.yesbot.mongodb.Mongo;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,6 +16,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -27,35 +29,36 @@ public class MessageScheduler {
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
     private static final List<ScheduledFuture<?>> SCHEDULES = new ArrayList<>();
-
     private static boolean bypass = false;
-    private static final List<EpicStorePromotion> PROMOTIONS = new ArrayList<>();
 
     public static void refresh(JDA jda) {
         for (ScheduledFuture<?> schedule : SCHEDULES) {
             schedule.cancel(true);
         }
         SCHEDULES.clear();
-        PROMOTIONS.clear();
         bypass = true;
 
         initialize(jda);
     }
 
     static void initialize(JDA jda) {
-
         SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(() -> {
             var guilds = jda.getGuilds();
             for (Guild guild : guilds) {
                 if (Mongo.hasGuildDocument(guild.getId())) {
+                    long channelId = Mongo.getPromotionsChannel(guild.getId());
+                    if (channelId == 0)
+                        continue;
 
-
-                    if (!bypass && Mongo.getLastSent(guild.getId()).getTime() > new Date().getTime() - 8.64e7) {
+                    Date lastSent = Mongo.getLastSent(guild.getId());
+                    if (!bypass && lastSent != null && lastSent.getTime() >= new Date().getTime() - 8.64e7) {
                         continue;
                     }
+
+                    var promos = Mongo.getLastPromotions(guild.getId());
+
                     Mongo.setLastSent(guild.getId(), new Date());
 
-                    long channelId = Mongo.getPromotionsChannel(guild.getId());
                     TextChannel channel = jda.getTextChannelById(channelId);
                     JsonObject json = getJson("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions");
 
@@ -63,70 +66,75 @@ public class MessageScheduler {
 
                     List<EpicStorePromotion> proms = new ArrayList<>();
                     for (JsonElement jsonElement : arr) {
-                        JsonObject o = jsonElement.getAsJsonObject();
-                        String seller = optionalString(o.getAsJsonObject("seller").get("name"));
-                        if (seller.equals("Epic Dev Test Account"))
+                        EpicStorePromotion p = EpicStorePromotion.of(jsonElement);
+                        if (p == null)
                             continue;
-
-                        int price = o.getAsJsonObject("price").getAsJsonObject("totalPrice").get("discountPrice").getAsInt();
-                        if (price != 0)
-                            continue;
-
-                        String url = "";
-                        for (var el : o.getAsJsonArray("offerMappings")) {
-                            url = "https://store.epicgames.com/en-US/p/" + el.getAsJsonObject().get("pageSlug").getAsString();
-                            break;
-                        }
-
-                        String title = optionalString(o.get("title"));
-                        String desc = optionalString(o.get("description"));
-                        String type = optionalString(o.get("offerType"));
-
-                        String image = "";
-                        for (var el : o.getAsJsonArray("keyImages")) {
-                            if (optionalString(el.getAsJsonObject().get("type")).equals("OfferImageWide")) {
-                                image = el.getAsJsonObject().get("url").getAsString();
-                                break;
-                            }
-                        }
-
-                        String endDate = "";
-                        for (var el1 : o.getAsJsonObject("promotions").getAsJsonArray("promotionalOffers")) {
-                            for (var el : el1.getAsJsonObject().getAsJsonArray("promotionalOffers")) {
-                                endDate = el.getAsJsonObject().get("endDate").getAsString();
-                                break;
-                            }
-                        }
-
-                        proms.add(new EpicStorePromotion(url, title, seller, desc, type, image, endDate));
+                        proms.add(p);
                     }
 
-                    if (!PROMOTIONS.equals(proms)) {
-                        PROMOTIONS.clear();
-                        PROMOTIONS.addAll(proms);
-                        PROMOTIONS.forEach(p -> {
-
-                            TemporalAccessor ta1 = DateTimeFormatter.ISO_INSTANT.parse(p.endDate);
-                            Instant i1 = Instant.from(ta1);
-                            Date d1 = Date.from(i1);
-
+                    if (!Objects.equals(promos, proms)) {
+                        Mongo.setLastPromotions(guild.getId(), proms);
+                        proms.forEach(p -> {
                             EmbedBuilder embed = new EmbedBuilder()
                                     .setColor(Color.RED)
                                     .setAuthor(p.seller, p.url)
                                     .setTitle(p.title)
                                     .setDescription(p.desc + "\n" + p.url)
                                     .setImage(p.image)
-                                    .addField("Until", d1.toString(), true);
+                                    .addField("Until", p.endDate.toString(), true);
                             channel.sendMessageEmbeds(embed.build()).queue();
                         });
                     }
                 }
             }
 
-        }, 0, 1, TimeUnit.DAYS));
+        }, 0, 25, TimeUnit.HOURS));
     }
 
-    public record EpicStorePromotion(String url, String title, String seller, String desc, String type, String image, String endDate) {
+    public record EpicStorePromotion(String url, String title, String seller, String desc, String type, String image, Date endDate) {
+
+        public static EpicStorePromotion of(JsonElement jsonElement) {
+            JsonObject o = jsonElement.getAsJsonObject();
+            String seller = optionalString(o.getAsJsonObject("seller").get("name"));
+            if (seller.equals("Epic Dev Test Account"))
+                return null;
+
+            int price = o.getAsJsonObject("price").getAsJsonObject("totalPrice").get("discountPrice").getAsInt();
+            if (price != 0)
+                return null;
+
+            String url = "";
+            for (var el : o.getAsJsonArray("offerMappings")) {
+                url = "https://store.epicgames.com/en-US/p/" + el.getAsJsonObject().get("pageSlug").getAsString();
+                break;
+            }
+
+            String title = optionalString(o.get("title"));
+            String desc = optionalString(o.get("description"));
+            String type = optionalString(o.get("offerType"));
+
+            String image = "";
+            for (var el : o.getAsJsonArray("keyImages")) {
+                if (optionalString(el.getAsJsonObject().get("type")).equals("OfferImageWide")) {
+                    image = el.getAsJsonObject().get("url").getAsString();
+                    break;
+                }
+            }
+
+            String endDate = "";
+            for (var el1 : o.getAsJsonObject("promotions").getAsJsonArray("promotionalOffers")) {
+                for (var el : el1.getAsJsonObject().getAsJsonArray("promotionalOffers")) {
+                    endDate = el.getAsJsonObject().get("endDate").getAsString();
+                    break;
+                }
+            }
+
+            TemporalAccessor ta1 = DateTimeFormatter.ISO_INSTANT.parse(endDate);
+            Instant i1 = Instant.from(ta1);
+            Date d1 = Date.from(i1);
+
+            return new EpicStorePromotion(url, title, seller, desc, type, image, d1);
+        }
 
         @Override
         public boolean equals(Object o) {

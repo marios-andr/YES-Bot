@@ -1,6 +1,7 @@
 package com.congueror.yesbot;
 
 import com.congueror.yesbot.command.Command;
+import com.congueror.yesbot.mongodb.Mongo;
 import com.congueror.yesbot.window.SetupWindow;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;

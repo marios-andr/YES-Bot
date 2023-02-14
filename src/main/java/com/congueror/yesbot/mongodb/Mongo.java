@@ -1,5 +1,7 @@
-package com.congueror.yesbot;
+package com.congueror.yesbot.mongodb;
 
+import com.congueror.yesbot.Constants;
+import com.congueror.yesbot.MessageScheduler;
 import com.congueror.yesbot.command.chess.ChessBoardType;
 import com.congueror.yesbot.command.chess.ChessPieceType;
 import com.mongodb.ConnectionString;
@@ -13,9 +15,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +25,7 @@ public final class Mongo {
     private static MongoCollection<Document> users;
     private static MongoCollection<Document> guilds;
 
-    static void initialize() {
+    public static void initialize() {
         ConnectionString connectionString = new ConnectionString("mongodb+srv://yesbot:" + Constants.getEnv("MONGO_PASSWORD") + "@yesbot.hd25z.mongodb.net/?retryWrites=true&w=majority");
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
@@ -146,8 +146,9 @@ public final class Mongo {
 
     private static Document createGuild(String snowflake) {
         return new Document("id", snowflake)
-                .append("promotions_channel", "")
-                .append("last_sent", "");
+                .append("promotions_channel", 0)
+                .append("last_sent", null)
+                .append("last_promotions", null);
     }
 
     public static boolean hasGuildDocument(String snowflake) {
@@ -182,15 +183,22 @@ public final class Mongo {
         putGuild(snowflake, "promotions_channel", id);
     }
 
+    @Nullable
     public static Date getLastSent(String snowflake) {
-        String v = getGuild(snowflake, "last_sent");
-        TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(v);
-        Instant i = Instant.from(ta);
-        return Date.from(i);
+        return getGuild(snowflake, "last_sent");
     }
 
     public static void setLastSent(String snowflake, Date date) {
-        putGuild(snowflake, "last_sent", date.toInstant().toString());
+        putGuild(snowflake, "last_sent", date);
+    }
+
+    @Nullable
+    public static List<MessageScheduler.EpicStorePromotion> getLastPromotions(String snowflake) {
+        return getGuild(snowflake, "last_promotions");
+    }
+
+    public static void setLastPromotions(String snowflake, List<MessageScheduler.EpicStorePromotion> promos) {
+        putGuild(snowflake, "last_promotions", promos);
     }
 
     private Mongo() {

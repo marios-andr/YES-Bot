@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.Mongo;
+import com.congueror.yesbot.mongodb.Mongo;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.channel.Channel;

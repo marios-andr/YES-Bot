@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.chess;
 
-import com.congueror.yesbot.Mongo;
+import com.congueror.yesbot.mongodb.Mongo;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
 
