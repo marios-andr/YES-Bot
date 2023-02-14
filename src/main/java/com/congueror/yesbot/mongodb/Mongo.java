@@ -16,7 +16,6 @@ import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -147,7 +146,6 @@ public final class Mongo {
     private static Document createGuild(String snowflake) {
         return new Document("id", snowflake)
                 .append("promotions_channel", 0)
-                .append("last_sent", null)
                 .append("last_promotions", null);
     }
 
@@ -184,17 +182,11 @@ public final class Mongo {
     }
 
     @Nullable
-    public static Date getLastSent(String snowflake) {
-        return getGuild(snowflake, "last_sent");
-    }
-
-    public static void setLastSent(String snowflake, Date date) {
-        putGuild(snowflake, "last_sent", date);
-    }
-
-    @Nullable
     public static List<MessageScheduler.EpicStorePromotion> getLastPromotions(String snowflake) {
-        return getGuild(snowflake, "last_promotions");
+        List<Document> a = getGuild(snowflake, "last_promotions");
+        if (a == null)
+            return null;
+        return a.stream().map(MessageScheduler.EpicStorePromotion::of).toList();
     }
 
     public static void setLastPromotions(String snowflake, List<MessageScheduler.EpicStorePromotion> promos) {

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.bson.Document;
 
 import java.awt.*;
 import java.time.Instant;
@@ -16,7 +17,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -29,14 +29,12 @@ public class MessageScheduler {
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
     private static final List<ScheduledFuture<?>> SCHEDULES = new ArrayList<>();
-    private static boolean bypass = false;
 
     public static void refresh(JDA jda) {
         for (ScheduledFuture<?> schedule : SCHEDULES) {
             schedule.cancel(true);
         }
         SCHEDULES.clear();
-        bypass = true;
 
         initialize(jda);
     }
@@ -50,14 +48,7 @@ public class MessageScheduler {
                     if (channelId == 0)
                         continue;
 
-                    Date lastSent = Mongo.getLastSent(guild.getId());
-                    if (!bypass && lastSent != null && lastSent.getTime() >= new Date().getTime() - 8.64e7) {
-                        continue;
-                    }
-
-                    var promos = Mongo.getLastPromotions(guild.getId());
-
-                    Mongo.setLastSent(guild.getId(), new Date());
+                    List<EpicStorePromotion> promos = Mongo.getLastPromotions(guild.getId());
 
                     TextChannel channel = jda.getTextChannelById(channelId);
                     JsonObject json = getJson("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions");
@@ -72,7 +63,7 @@ public class MessageScheduler {
                         proms.add(p);
                     }
 
-                    if (!Objects.equals(promos, proms)) {
+                    if (!proms.equals(promos)) {
                         Mongo.setLastPromotions(guild.getId(), proms);
                         proms.forEach(p -> {
                             EmbedBuilder embed = new EmbedBuilder()
@@ -87,11 +78,18 @@ public class MessageScheduler {
                     }
                 }
             }
-
-        }, 0, 25, TimeUnit.HOURS));
+        }, 0, 30, TimeUnit.MINUTES));
     }
 
     public record EpicStorePromotion(String url, String title, String seller, String desc, String type, String image, Date endDate) {
+
+        public static EpicStorePromotion of(Document doc) {
+            return new EpicStorePromotion(
+                    doc.getString("url"), doc.getString("title"), doc.getString("seller"),
+                    doc.getString("desc"), doc.getString("type"), doc.getString("image"),
+                    doc.getDate("endDate")
+            );
+        }
 
         public static EpicStorePromotion of(JsonElement jsonElement) {
             JsonObject o = jsonElement.getAsJsonObject();
