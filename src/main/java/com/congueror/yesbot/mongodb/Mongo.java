@@ -2,8 +2,8 @@ package com.congueror.yesbot.mongodb;
 
 import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.MessageScheduler;
-import com.congueror.yesbot.command.chess.ChessBoardType;
-import com.congueror.yesbot.command.chess.ChessPieceType;
+import com.congueror.yesbot.command.chess.ChessBoardDecor;
+import com.congueror.yesbot.command.chess.ChessPieceDecor;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerApi;
@@ -34,6 +34,7 @@ public final class Mongo {
                 .build();
         MongoClient mongoClient = MongoClients.create(settings);
         MongoDatabase database = mongoClient.getDatabase("users");
+
         users = database.getCollection("users");
         guilds = database.getCollection("guilds");
     }
@@ -70,12 +71,12 @@ public final class Mongo {
         users.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static ChessBoardType getSelectedBoard(String snowflake) {
-        return ChessBoardType.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
+    public static ChessBoardDecor getSelectedBoard(String snowflake) {
+        return ChessBoardDecor.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
     }
 
-    public static ChessPieceType getSelectedPiece(String snowflake) {
-        return ChessPieceType.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
+    public static ChessPieceDecor getSelectedPiece(String snowflake) {
+        return ChessPieceDecor.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
     }
 
     public static void addChessWin(String snowflake) {
@@ -102,7 +103,7 @@ public final class Mongo {
     public static void addBoard(String snowflake, String board) {
         HashSet<String> ownedBoards = getUser(snowflake, "ownedBoards");
         try {
-            ChessBoardType.valueOf(board.toUpperCase());
+            ChessBoardDecor.valueOf(board.toUpperCase());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return;
@@ -113,7 +114,7 @@ public final class Mongo {
 
     public static void changeBoard(String snowflake, String board) {
         try {
-            ChessBoardType.valueOf(board.toUpperCase());
+            ChessBoardDecor.valueOf(board.toUpperCase());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return;
@@ -124,7 +125,7 @@ public final class Mongo {
     public static void addPiece(String snowflake, String piece) {
         HashSet<String> ownedPieces = getUser(snowflake, "ownedPieces");
         try {
-            ChessPieceType.valueOf(piece.toUpperCase());
+            ChessPieceDecor.valueOf(piece.toUpperCase());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return;
@@ -135,7 +136,7 @@ public final class Mongo {
 
     public static void changePieces(String snowflake, String piece) {
         try {
-            ChessPieceType.valueOf(piece.toUpperCase());
+            ChessPieceDecor.valueOf(piece.toUpperCase());
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
             return;
@@ -182,14 +183,14 @@ public final class Mongo {
     }
 
     @Nullable
-    public static List<MessageScheduler.EpicStorePromotion> getLastPromotions(String snowflake) {
-        List<Document> a = getGuild(snowflake, "last_promotions");
+    public static MessageScheduler.PromotionCollection getLastPromotions(String snowflake) {
+        Document a = getGuild(snowflake, "last_promotions");
         if (a == null)
             return null;
-        return a.stream().map(MessageScheduler.EpicStorePromotion::of).toList();
+        return MessageScheduler.PromotionCollection.of(a);
     }
 
-    public static void setLastPromotions(String snowflake, List<MessageScheduler.EpicStorePromotion> promos) {
+    public static void setLastPromotions(String snowflake, MessageScheduler.PromotionCollection promos) {
         putGuild(snowflake, "last_promotions", promos);
     }
 

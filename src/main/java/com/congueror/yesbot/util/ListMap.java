@@ -1,4 +1,4 @@
-package com.congueror.yesbot;
+package com.congueror.yesbot.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;

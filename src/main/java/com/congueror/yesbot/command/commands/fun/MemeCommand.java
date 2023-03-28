@@ -1,16 +1,21 @@
 package com.congueror.yesbot.command.commands.fun;
 
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-public class MemeCommand implements Command {
+@Command
+public class MemeCommand extends AbstractCommand {
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] meme = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] meme = getInput(event.getMessage());
         if (check(meme)) {
             Message reference = event.getMessage();
 
@@ -20,20 +25,24 @@ public class MemeCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        String[] subreddits = new String[]{"memes", "dankmemes"};
+        sendRandomPost(event, subreddits);
+    }
+
+    @Override
     public String getName() {
         return "meme";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[]{};
+    public OptionData[] getArgs() {
+        return new OptionData[]{};
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("Send a random meme from a meme subreddit");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "Send a random meme from a meme subreddit";
     }
 
     @Override

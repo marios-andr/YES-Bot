@@ -1,9 +1,10 @@
 package com.congueror.yesbot;
 
-import com.congueror.yesbot.command.Command;
+import com.congueror.yesbot.command.AbstractCommand;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -18,10 +19,19 @@ public class BotListenerAdapter extends ListenerAdapter {
     public BotListenerAdapter() {
     }
 
+    @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        var cmd = AbstractCommand.getCommand(event.getName());
+        if (cmd != null) {
+            event.deferReply().queue();
+            cmd.onSlashCommandInteraction(event);
+        }
+    }
+
     @SuppressWarnings({"ConstantConditions"})
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        System.out.printf("[%s | %s]: %s\n", event.getAuthor().getName(), event.getGuild().getName(), event.getMessage().getContentDisplay());
+        YESBot.LOG.debug("[{} | {}]: {}\n", event.getAuthor().getName(), event.getGuild().getName(), event.getMessage().getContentDisplay());
 
         if (event.getAuthor().isBot() && event.isWebhookMessage()) {
             return;
@@ -54,15 +64,16 @@ public class BotListenerAdapter extends ListenerAdapter {
 
         //Handle Commands
         String cmd = event.getMessage().getContentRaw().split(" ")[0];
-        if (Command.getCommand(cmd) != null) {
-            Command.getCommand(cmd).handle(event);
+        var command = AbstractCommand.getCommand(cmd);
+        if (command != null) {
+            AbstractCommand.getCommand(cmd).onMessageReceived(event);
         }
     }
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        for (Command cmd : Constants.COMMANDS) {
-            cmd.handleMessageReaction(event);
+        for (AbstractCommand cmd : Constants.COMMANDS) {
+            cmd.onMessageReactionAdd(event);
         }
     }
 

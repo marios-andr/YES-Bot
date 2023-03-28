@@ -1,24 +1,27 @@
 package com.congueror.yesbot.command.commands.chess;
 
 import com.congueror.yesbot.Constants;
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.chess.ChessBoard;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
+import org.jetbrains.annotations.NotNull;
 
-public class ChessCommand implements Command {
-
-    private Message message;
-    private User challenger;
-    private User challenged;
+@Command
+public class ChessCommand extends AbstractCommand {
 
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] chess = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] chess = getInput(event.getMessage());
         if (check(chess)) {
             Message reference = event.getMessage();
 
@@ -36,14 +39,11 @@ public class ChessCommand implements Command {
                             return;
                         }
 
-                        challenger = player1;
-                        challenged = player2;
-
                         event.getChannel().sendMessage(chess[1] + ", " + event.getAuthor().getAsMention() + " has challenged you to a game of chess!" +
                                 " Do you accept?").setMessageReference(reference).queue(message -> {
                             message.addReaction(Emoji.fromFormatted("U+2705")).queue();
                             message.addReaction(Emoji.fromFormatted("U+274E")).queue();
-                            this.message = message;
+                            ChessBoard.createRequest(message.getId(), player1.getId(), player2.getId());
                         });
                     } else {
                         event.getChannel().sendMessage("Can't play with yourself on this one chief.").setMessageReference(reference).queue();
@@ -62,17 +62,49 @@ public class ChessCommand implements Command {
     }
 
     @Override
-    public void handleMessageReaction(MessageReactionAddEvent event) {
-        if (isReactionMessage(event, message, challenged)) {
-            if (event.getReaction().getEmoji().getName().equals("\u2705")) {
-                event.getChannel().sendMessage(challenger.getAsMention() + ", " + challenged.getAsMention() + " accepted your challenge! Good luck.").setMessageReference(this.message).queue();
-                ChessBoard board = ChessBoard.newChessBoard(new String[]{challenger.getId(), challenged.getId()});
-                event.getChannel().sendFiles(FileUpload.fromData(board.drawBoard(null))).setMessageReference(message).queue();
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        if (event.getReaction().getEmoji().getName().equals("\u2705")) {
+            ChessBoard board = ChessBoard.acceptRequest(event.getMessageId(), event.getUser().getId(), (s, s2) -> {
+                event.getChannel().sendMessage(mention(s) + ", " + mention(s2) + " accepted your challenge! Good luck.").setMessageReference(event.getMessageId()).queue();
+            });
+            event.getChannel().sendFiles(FileUpload.fromData(board.drawBoard(null))).setMessageReference(event.getMessageId()).queue();
+        } else if (event.getReaction().getEmoji().getName().equals("\u274E")) {
+            ChessBoard.declineRequest(event.getMessageId(), event.getUser().getId(), (s, s2) -> {
+                event.getChannel().sendMessage(mention(s) + ", " + mention(s2) + " declined your challenge.").setMessageReference(event.getMessageId()).queue();
+            });
+        }
+    }
 
-                message = null;
-            } else if (event.getReaction().getEmoji().getName().equals("\u274E")) {
-                event.getChannel().sendMessage(challenger.getAsMention() + ", " + challenged.getAsMention() + " declined your challenge. What a pussy.").setMessageReference(this.message).queue();
-                message = null;
+    @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        final User player1 = event.getUser();
+        var op = event.getOption("player");
+        if (op != null) {
+            final User player2 = op.getAsUser();
+            if (!player1.getId().equals(player2.getId())) {
+                if (!(!player1.isBot() || player1.getId().equals(Constants.SNOWFLAKE_ID)) || !(!player2.isBot() || player2.getId().equals(Constants.SNOWFLAKE_ID))) {
+                    event.getHook().sendMessage("You need to play with a real person. Probably a weird concept to you...").queue();
+                    return;
+                }
+                if (ChessBoard.isInGame(player1.getId()) || ChessBoard.isInGame(player2.getId())) {
+                    event.getHook().sendMessage("User is already playing.").queue();
+                    return;
+                }
+
+                event.getHook().sendMessage(player2.getAsMention() + ", " + player1.getAsMention() + " has challenged you to a game of chess!" +
+                        " Do you accept?").queue(message -> {
+                    message.addReaction(Emoji.fromFormatted("U+2705")).queue();
+                    message.addReaction(Emoji.fromFormatted("U+274E")).queue();
+                    ChessBoard.createRequest(message.getId(), player1.getId(), player2.getId());
+                });
+            } else {
+                event.getHook().sendMessage("Can't play with yourself on this one chief.").queue();
+            }
+        } else {
+            if (ChessBoard.isInGame(player1.getId())) {
+                event.getHook().sendFiles(FileUpload.fromData(ChessBoard.getGame(player1.getId()).drawBoard(null))).queue();
+            } else {
+                event.getHook().sendFiles(FileUpload.fromData(ChessBoard.newChessBoard(new String[]{player1.getId()}).drawBoard(null))).queue();
             }
         }
     }
@@ -83,13 +115,15 @@ public class ChessCommand implements Command {
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[]{"player"};
+    public OptionData[] getArgs() {
+        return new OptionData[]{
+                new OptionData(OptionType.USER, "player", "The player to play against", false)
+        };
     }
 
     @Override
-    public String getDescription() {
-        return "for temporary testing";
+    public String getCommandDescription() {
+        return "Challenge someone to a game of chess!";
     }
 
     @Override

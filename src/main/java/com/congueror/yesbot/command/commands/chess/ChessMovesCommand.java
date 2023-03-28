@@ -1,19 +1,25 @@
 package com.congueror.yesbot.command.commands.chess;
 
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.chess.ChessBoard;
 import com.congueror.yesbot.command.chess.ChessPosition;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-public class ChessMovesCommand implements Command {
+@Command
+public class ChessMovesCommand extends AbstractCommand {
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] moves = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] moves = getInput(event.getMessage());
         if (check(moves)) {
             Message reference = event.getMessage();
 
@@ -41,21 +47,45 @@ public class ChessMovesCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        if (ChessBoard.isInGame(event.getUser().getId())) {
+            var pos = event.getOption("position").getAsString();
+            if (!(pos.length() >= 2)) {
+                event.getHook().sendMessage("What the hell is that?").queue();
+            }
+
+            int first = 8 - Integer.parseInt(pos.substring(1, 2));
+            int second = pos.substring(0, 1).toCharArray()[0] - 97;
+            int[] from = new int[]{first, second};
+
+            if (!ChessPosition.isInBounds(from)) {
+                event.getHook().sendMessage("That is an invalid position.").queue();
+            }
+
+            ChessBoard game = ChessBoard.getGame(event.getUser().getId());
+            if (game != null) {
+                event.getHook().sendFiles(FileUpload.fromData(game.drawBoard(from))).queue();
+            }
+        } else {
+            event.getHook().sendMessage("You're not playing a game.").queue();
+        }
+    }
+
+    @Override
     public String getName() {
         return "moves";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[]{"position"};
+    public OptionData[] getArgs() {
+        return new OptionData[] {
+                new OptionData(OptionType.STRING, "position", "The position of the piece, must be written like: \"a2\".", true)
+        };
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("Displays the moves a piece can make.");
-        desc.add("position: The position of the piece, must be written like: \"a2\"");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "Displays the moves a piece can make.";
     }
 
     @Override

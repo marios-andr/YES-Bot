@@ -1,15 +1,21 @@
 package com.congueror.yesbot.command.commands;
 
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-public class RNGCommand implements Command {
+@Command
+public class RNGCommand extends AbstractCommand {
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] rng = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] rng = getInput(event.getMessage());
         if (check(rng)) {
             int min = Integer.parseInt(rng[1]);
             int max = Integer.parseInt(rng[2]);
@@ -25,21 +31,32 @@ public class RNGCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        int min = event.getOption("min").getAsInt();
+        int max = event.getOption("max").getAsInt();
+        if (min < max) {
+            int randomValue = (int) Math.floor(Math.random() * (max - min + 1) + min);
+            event.getHook().sendMessage("Randomized Value: " + randomValue).queue();
+        } else {
+            event.getHook().sendMessage("Maximum needs to be higher than minimum...obviously...").setEphemeral(true).queue();
+        }
+    }
+
+    @Override
     public String getName() {
         return "rng";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[] {"min", "max"};
+    public OptionData[] getArgs() {
+        return new OptionData[] {
+                new OptionData(OptionType.INTEGER, "min", "The minimum number. Inclusive.", true),
+                new OptionData(OptionType.INTEGER, "max", "The maximum number. Inclusive.", true)
+        };
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("Get a pseudorandom number between the two numbers.");
-        desc.add("min: Minimum number the bot can get.");
-        desc.add("max: Maximum number the bot can get.");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "Get a pseudorandom number between the two numbers.";
     }
 }
