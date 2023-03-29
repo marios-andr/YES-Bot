@@ -90,14 +90,19 @@ public class YESBot {
             var global = Constants.COMMANDS.stream().filter(command -> Objects.equals(command.getScope(), AbstractCommand.Scope.GLOBAL)).toList();
 
             jda.getGuilds().forEach(g -> {
+                //g.updateCommands().queue();
+
                 var commands = g.updateCommands();
-                guild.forEach(c -> commands.addCommands(c.createCommand()).queue());
+                guild.forEach(c -> commands.addCommands(c.createCommand()));
+                commands.queue();
             });
 
+            //jda.updateCommands().queue();
             var commands = jda.updateCommands();
             global.forEach(c -> {
                 commands.addCommands(c.createCommand()).queue();
             });
+            commands.queue();
         }
     }
 

@@ -5,12 +5,11 @@ import com.congueror.yesbot.RedditUser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -31,7 +30,6 @@ public abstract class AbstractCommand extends ListenerAdapter {
     protected static final String UTILITY = ":tools: Utility";
     protected static final String TESTING = ":robot: Testing";
     protected static final String VOICE = ":loud_sound: Voice";
-    protected static final String NSFW = ":underage: NSFW";
     protected static final String FUN = ":frog: Fun";
     protected static final String CHESS = ":chess_pawn: Chess";
 
@@ -53,9 +51,14 @@ public abstract class AbstractCommand extends ListenerAdapter {
         return Scope.GUILD;
     }
 
+    public DefaultMemberPermissions getPermissions() {
+        return DefaultMemberPermissions.ENABLED;
+    }
+
     public CommandData createCommand() {
         var com = Commands.slash(getName(), getCommandDescription().substring(0, Math.min(getCommandDescription().length(), 100)));
         com.addOptions(getArgs());
+        com.setDefaultPermissions(getPermissions());
         return com;
     }
 
