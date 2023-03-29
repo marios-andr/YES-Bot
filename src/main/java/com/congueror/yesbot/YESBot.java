@@ -12,9 +12,6 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import org.apache.commons.io.IOUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.slf4j.LoggerFactory;
@@ -22,13 +19,10 @@ import org.slf4j.Marker;
 import org.slf4j.event.Level;
 import org.slf4j.simple.SimpleLoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.stream.Stream;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 public class YESBot {
 
