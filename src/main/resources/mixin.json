@@ -1,7 +1,0 @@
-{
-  "package": "com.congueror.yesbot.mixin",
-  "mixins": [
-    "MixinTest"
-  ],
-  "refmap": "mixin.refmap.json"
-}
