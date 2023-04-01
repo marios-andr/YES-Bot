@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import static com.congueror.yesbot.Constants.getJson;
 import static com.congueror.yesbot.Constants.optionalString;
 
-public class MessageScheduler {
+public class TaskScheduler {
 
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
     private static final List<ScheduledFuture<?>> SCHEDULES = new ArrayList<>();
@@ -44,6 +44,7 @@ public class MessageScheduler {
 
     static void initialize(JDA jda) {
         SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(WebInterface.PERIODIC_PING, 0, 50, TimeUnit.SECONDS));
+        SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(() -> YESBot.LOG.info("test"), 0, 50, TimeUnit.SECONDS));
 
         if (jda.getStatus().equals(JDA.Status.SHUTDOWN))
             return;

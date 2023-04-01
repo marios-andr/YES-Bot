@@ -1,7 +1,7 @@
 package com.congueror.yesbot.window;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.MessageScheduler;
+import com.congueror.yesbot.TaskScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -465,7 +465,7 @@ public class SetupWindow {
         button.setBorder(null);
         button.setMargin(new Insets(0, 0, 0, 0));
         button.setContentAreaFilled(false);
-        button.addActionListener(e -> MessageScheduler.refresh(jda));
+        button.addActionListener(e -> TaskScheduler.refresh(jda));
 
         return button;
     }

@@ -1,7 +1,7 @@
 package com.congueror.yesbot.mongodb;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.MessageScheduler;
+import com.congueror.yesbot.TaskScheduler;
 import com.congueror.yesbot.command.chess.ChessBoardDecor;
 import com.congueror.yesbot.command.chess.ChessPieceDecor;
 import com.mongodb.ConnectionString;
@@ -183,14 +183,14 @@ public final class Mongo {
     }
 
     @Nullable
-    public static MessageScheduler.PromotionCollection getLastPromotions(String snowflake) {
+    public static TaskScheduler.PromotionCollection getLastPromotions(String snowflake) {
         Document a = getGuild(snowflake, "last_promotions");
         if (a == null)
             return null;
-        return MessageScheduler.PromotionCollection.of(a);
+        return TaskScheduler.PromotionCollection.of(a);
     }
 
-    public static void setLastPromotions(String snowflake, MessageScheduler.PromotionCollection promos) {
+    public static void setLastPromotions(String snowflake, TaskScheduler.PromotionCollection promos) {
         putGuild(snowflake, "last_promotions", promos);
     }
 

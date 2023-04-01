@@ -4,7 +4,8 @@ let responses = new Map([
     ["initialize", init],
     ["guilds", addGuildButtons],
     ["channels", addChannelOptions],
-    ["channel_users", addUserOptions]
+    ["channel_users", addUserOptions],
+    ["console", onConsoleMessage]
 ])
 
 
@@ -97,6 +98,12 @@ function addUserOptions(data) {
 
         users.appendChild(option);
     })
+}
+
+function onConsoleMessage(data) {
+    let console = id("console");
+
+    console.value += data.msg + "\r\n";
 }
 
 function onMoveButtonPress(direction) {

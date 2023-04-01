@@ -85,6 +85,20 @@ public final class WebInterface {
         });
     }
 
+    public static void sendToConsole(String out) {
+        for (var iter = CONTEXTS.iterator(); iter.hasNext(); ) {
+            WsContext ctx = iter.next();
+            if (!ctx.session.isOpen()) {
+                iter.remove();
+                continue;
+            }
+
+            JsonObject json = createMessage("console");
+            json.addProperty("msg", out);
+            ctx.send(GSON.toJson(json));
+        }
+    }
+
     private static Stream<Guild> getGuild(String guildId) {
         return GUILDS.stream().filter(guild -> guild.getId().equals(guildId));
     }
@@ -97,6 +111,12 @@ public final class WebInterface {
         return getGuild(guildId).flatMap(guild -> guild.getVoiceChannels().stream()).filter(voiceChannel -> voiceChannel.getId().equals(channelId));
     }
 
+    private static JsonObject createMessage(String type) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("type", type);
+        return obj;
+    }
+
     private static Object initMsg(String id) {
         return Map.of(
                 "type", "initialize",
@@ -105,11 +125,11 @@ public final class WebInterface {
     }
 
     private static void guildMsg(WsContext ctx, JsonObject obj) {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", "guilds");
+        JsonObject json = createMessage("guilds");
+
         JsonArray guilds = new JsonArray();
+        String def = "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg";
         for (Guild guild : GUILDS) {
-            String def = "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg";
             JsonObject o = new JsonObject();
             o.addProperty("id", guild.getId());
             o.addProperty("name", guild.getName());
@@ -122,8 +142,7 @@ public final class WebInterface {
     }
 
     private static void channelsMsg(WsContext ctx, JsonObject obj) {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", "channels");
+        JsonObject json = createMessage("channels");
 
         JsonArray channels = new JsonArray();
         String guildId = obj.get("guildId").getAsString();
@@ -163,8 +182,7 @@ public final class WebInterface {
     }
 
     private static void channelUsersMsg(WsContext ctx, JsonObject obj) {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", "channel_users");
+        JsonObject json = createMessage("channel_users");
 
         JsonArray users = new JsonArray();
         String channelId = obj.get("channelId").getAsString();
@@ -243,22 +261,22 @@ public final class WebInterface {
     }
 
     private static void shutdownMsg(WsContext ctx, JsonObject obj) {
-        if (JDA == null) {
+        if (JDA == null || JDA.getStatus().equals(net.dv8tion.jda.api.JDA.Status.SHUTDOWN)) {
             try {
                 JDA = YESBot.createJDA();
-                MessageScheduler.refresh(JDA);
+                TaskScheduler.refresh(JDA);
             } catch (Exception e) {
                 YESBot.LOG.error("Something went wrong while starting the JDA", e);
             }
         } else {
             JDA.shutdown();
-            MessageScheduler.refresh(JDA);
+            TaskScheduler.refresh(JDA);
             JDA = null;
         }
     }
 
     private static void refreshMsg(WsContext ctx, JsonObject obj) {
-        MessageScheduler.refresh(JDA);
+        TaskScheduler.refresh(JDA);
     }
 
     @FunctionalInterface
