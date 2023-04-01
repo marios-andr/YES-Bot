@@ -5,4 +5,3 @@
 /.idea/
 /src/main/resources/.env
 /org/slf4j/simple/SimpleLogger.class
-test.json
