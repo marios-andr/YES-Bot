@@ -146,7 +146,7 @@ public final class Constants {
     }
 
     public record Settings(String token, String bot_snowflake, String owner_snowflake,
-                           String mongo_password,
+                           String mongo_link,
                            String reddit_username, String reddit_password, String reddit_client,
                            String reddit_secret,
                            String steam_token, User[] credentials) {

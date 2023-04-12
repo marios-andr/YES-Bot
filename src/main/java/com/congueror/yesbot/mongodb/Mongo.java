@@ -25,7 +25,7 @@ public final class Mongo {
     private static MongoCollection<Document> guilds;
 
     public static void initialize() {
-        ConnectionString connectionString = new ConnectionString("mongodb+srv://yesbot:" + Constants.getSettings().mongo_password() + "@yesbot.hd25z.mongodb.net/?retryWrites=true&w=majority");
+        ConnectionString connectionString = new ConnectionString(Constants.getSettings().mongo_link());
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
                 .serverApi(ServerApi.builder()
