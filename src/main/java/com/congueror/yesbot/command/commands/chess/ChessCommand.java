@@ -30,7 +30,8 @@ public class ChessCommand extends AbstractCommand {
                 if (reference.getMentions().getMembers().size() > 0) {
                     final User player2 = reference.getMentions().getMembers().get(0).getUser();
                     if (!player1.getId().equals(player2.getId())) {
-                        if (!(!player1.isBot() || player1.getId().equals(Constants.SNOWFLAKE_ID)) || !(!player2.isBot() || player2.getId().equals(Constants.SNOWFLAKE_ID))) {
+                        final String SNOWFLAKE_ID = Constants.getSettings().bot_snowflake();
+                        if (!(!player1.isBot() || player1.getId().equals(SNOWFLAKE_ID)) || !(!player2.isBot() || player2.getId().equals(SNOWFLAKE_ID))) {
                             event.getChannel().sendMessage("You need to play with a real person. Probably a weird concept to you...").setMessageReference(reference).queue();
                             return;
                         }
@@ -82,7 +83,8 @@ public class ChessCommand extends AbstractCommand {
         if (op != null) {
             final User player2 = op.getAsUser();
             if (!player1.getId().equals(player2.getId())) {
-                if (!(!player1.isBot() || player1.getId().equals(Constants.SNOWFLAKE_ID)) || !(!player2.isBot() || player2.getId().equals(Constants.SNOWFLAKE_ID))) {
+                final String SNOWFLAKE_ID = Constants.getSettings().bot_snowflake();
+                if (!(!player1.isBot() || player1.getId().equals(SNOWFLAKE_ID)) || !(!player2.isBot() || player2.getId().equals(SNOWFLAKE_ID))) {
                     event.getHook().sendMessage("You need to play with a real person. Probably a weird concept to you...").queue();
                     return;
                 }

@@ -31,7 +31,7 @@ public class BotListenerAdapter extends ListenerAdapter {
     @SuppressWarnings({"ConstantConditions"})
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        YESBot.LOG.debug("[{} | {}]: {}\n", event.getAuthor().getName(), event.getGuild().getName(), event.getMessage().getContentDisplay());
+        Constants.LOG.debug("[{} | {}]: {}\n", event.getAuthor().getName(), event.getGuild().getName(), event.getMessage().getContentDisplay());
 
         if (event.getAuthor().isBot() && event.isWebhookMessage()) {
             return;
@@ -56,7 +56,7 @@ public class BotListenerAdapter extends ListenerAdapter {
             event.getChannel().sendMessage("https://tenor.com/view/star-wars-anakin-skywalker-what-have-i-done-confused-sad-gif-3575836").queue();
         }
 
-        if (event.getMessage().getContentRaw().equals("|shutdown") && event.getAuthor().getId().equals(Constants.getEnv("owner_id"))) {
+        if (event.getMessage().getContentRaw().equals("|shutdown") && event.getAuthor().getId().equals(Constants.getSettings().owner_snowflake())) {
             event.getChannel().sendMessage("Shutting down!").queue();
             event.getJDA().shutdown();
             return;

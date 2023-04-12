@@ -5,7 +5,7 @@ let responses = new Map([
     ["guilds", addGuildButtons],
     ["channels", addChannelOptions],
     ["channel_users", addUserOptions],
-    ["console", onConsoleMessage]
+    ["console", appendConsoleMessage]
 ])
 
 
@@ -23,6 +23,9 @@ ws.onclose = () => {
 function init(data) {
     ws.send(JSON.stringify({
         type: "guilds"
+    }));
+    ws.send(JSON.stringify({
+        type: "console_msgs"
     }));
 }
 
@@ -44,6 +47,11 @@ function addGuildButtons(data) {
         button.type = "button"
         button.addEventListener("click", function () {
             currentGuild = e.id;
+
+            id("text_channel_select").innerHTML = '';
+            id("voice_channel_select").innerHTML = '';
+            id("users_select").innerHTML = '';
+
             ws.send(JSON.stringify({
                 type: "channels",
                 guildId: e.id
@@ -100,10 +108,11 @@ function addUserOptions(data) {
     })
 }
 
-function onConsoleMessage(data) {
-    let console = id("console");
+function appendConsoleMessage(data) {
+    let cnsl = id("console");
 
-    console.value += data.msg + "\r\n";
+    console.log(data.message);
+    cnsl.value += data.message;
 }
 
 function onMoveButtonPress(direction) {
@@ -215,7 +224,7 @@ function onUnlockPress() {
 }
 
 function onStopPress() {
-    let flag = confirm("Are you sure you wish to shutdown the bot?");
+    let flag = confirm("Are you sure you wish to power on/off the bot?");
 
     if (flag) {
         ws.send(JSON.stringify({

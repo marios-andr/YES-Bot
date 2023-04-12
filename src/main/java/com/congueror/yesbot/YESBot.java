@@ -3,6 +3,7 @@ package com.congueror.yesbot;
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.util.CustomPrintStream;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -11,19 +12,24 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
-import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 
 public class YESBot {
 
-    public static final org.slf4j.Logger LOG = LoggerFactory.getLogger(YESBot.class);
-
     public static void main(String[] args) {
         try {
+            Constants.init();
+
+            setupSystemTray();
+
             Mongo.initialize();
-            RedditUser.initialize();
+            Reddit.initialize();
 
             JDA jda = createJDA();
             setupCommands(jda, args);
@@ -37,13 +43,13 @@ public class YESBot {
             TaskScheduler.initialize(jda);
 
         } catch (Exception e) {
-            LOG.error("There was an error initializing the application", e);
+            Constants.LOG.error("There was an error initializing the application", e);
             System.exit(-1);
         }
     }
 
     public static JDA createJDA() throws InterruptedException {
-        JDA jda = JDABuilder.createDefault(Constants.getEnv("token"),
+        JDA jda = JDABuilder.createDefault(Constants.getSettings().token(),
                         GatewayIntent.GUILD_MESSAGES,
                         GatewayIntent.MESSAGE_CONTENT,
                         GatewayIntent.DIRECT_MESSAGES,
@@ -70,7 +76,7 @@ public class YESBot {
                 AbstractCommand command = (AbstractCommand) clazz.newInstance();
                 Constants.COMMANDS.add(command);
             } catch (Exception e) {
-                LOG.error("There was a problem instantiating a command: ", e);
+                Constants.LOG.error("There was a problem instantiating a command: ", e);
             }
         }
 
@@ -95,7 +101,34 @@ public class YESBot {
         }
     }
 
-    public static void onLogMessage(String out) {
-        WebInterface.sendToConsole(out);
+    private static void setupSystemTray() {
+        SystemTray t = SystemTray.getSystemTray();
+        BufferedImage image = null;
+
+        try {
+            //noinspection ConstantConditions
+            image = ImageIO.read(YESBot.class.getClassLoader().getResource("web/bot/images/send.png"));
+        } catch (IOException e3) {
+            e3.printStackTrace();
+        }
+
+        TrayIcon ic = new TrayIcon(image);
+        ic.setImageAutoSize(true);
+        PopupMenu menu = new PopupMenu();
+
+        MenuItem show = new MenuItem("Shutdown");
+        show.addActionListener(e1 -> {
+            Constants.LOG.info("System was manually shutdown.");
+
+            System.exit(0);
+        });
+
+        menu.add(show);
+        ic.setPopupMenu(menu);
+        try {
+            t.add(ic);
+        } catch (AWTException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

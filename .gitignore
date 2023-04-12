@@ -4,4 +4,5 @@
 /build/classes/java/main/
 /.idea/
 /src/main/resources/.env
-/org/slf4j/simple/SimpleLogger.class
+/logs/
+/settings.json

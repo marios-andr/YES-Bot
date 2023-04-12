@@ -44,9 +44,9 @@ public class TaskScheduler {
 
     static void initialize(JDA jda) {
         SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(WebInterface.PERIODIC_PING, 0, 50, TimeUnit.SECONDS));
-        SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(() -> YESBot.LOG.info("test"), 0, 50, TimeUnit.SECONDS));
+        //SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(() -> YESBot.LOG.info("test"), 0, 50, TimeUnit.SECONDS));
 
-        if (jda.getStatus().equals(JDA.Status.SHUTDOWN))
+        if (jda == null || jda.getStatus().equals(JDA.Status.SHUTDOWN))
             return;
 
         SCHEDULES.add(SCHEDULER.scheduleWithFixedDelay(() -> {
@@ -79,7 +79,7 @@ public class TaskScheduler {
                     }
                 }
             } catch (Exception e) {
-                YESBot.LOG.error("An exception occurred while updating promotions", e);
+                Constants.LOG.error("An exception occurred while updating promotions", e);
             }
         }, 0, 120, TimeUnit.MINUTES));
 
@@ -227,7 +227,7 @@ public class TaskScheduler {
 
     public record SteamStorePromotion() {
         public static void parseSteam() {
-            JsonObject json = getJson(String.format("https://api.steampowered.com/IStoreService/GetAppList/v1/?key=%s&if_modified_since=%s&include_games=true", Constants.getEnv("STEAM_KEY"), new Date()));
+            JsonObject json = getJson(String.format("https://api.steampowered.com/IStoreService/GetAppList/v1/?key=%s&if_modified_since=%s&include_games=true", Constants.getSettings().steam_token(), new Date()));
 
         }
     }

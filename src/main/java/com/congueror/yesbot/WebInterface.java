@@ -1,7 +1,6 @@
 package com.congueror.yesbot;
 
 import com.congueror.yesbot.util.MapBuilder;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.javalin.Javalin;
@@ -14,6 +13,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.managers.AudioManager;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -25,10 +25,10 @@ public final class WebInterface {
     }
 
     private static Javalin APP;
-    private static final Gson GSON = new Gson();
     private static JDA JDA;
     private static List<Guild> GUILDS;
     private static final List<WsContext> CONTEXTS = new ArrayList<>();
+
     public static final Runnable PERIODIC_PING = () -> {
         for (var iter = CONTEXTS.iterator(); iter.hasNext(); ) {
             WsContext ctx = iter.next();
@@ -41,7 +41,8 @@ public final class WebInterface {
     };
 
     private static final Map<String, Message> REQUESTS = new MapBuilder<String, Message>(new HashMap<>())
-            .put("guilds", WebInterface::guildMsg)
+            .put("console_msgs", WebInterface::consoleMsgs)
+            .put("guilds", WebInterface::guildsMsg)
             .put("channels", WebInterface::channelsMsg)
             .put("send_msg", WebInterface::sendMsg)
             .put("channel_users", WebInterface::channelUsersMsg)
@@ -65,22 +66,22 @@ public final class WebInterface {
 
         APP.ws("/bot", ws -> {
             ws.onConnect(ctx -> {
-                if (!(Objects.equals(ctx.queryParam("name"), "No") && Objects.equals(ctx.queryParam("password"), "Yes"))) {
+                if (!Constants.checkCredentials(ctx.queryParam("name"), ctx.queryParam("password"))) {
                     ctx.closeSession();
                 } else {
-                    YESBot.LOG.info("Successfully connected to client.");
+                    Constants.LOG.info("Successfully connected to client.");
                     ctx.session.setIdleTimeout(Duration.of(1, ChronoUnit.MINUTES));
                     CONTEXTS.add(ctx);
                     ctx.send(initMsg(ctx.getSessionId()));
                 }
             });
             ws.onClose(ctx -> {
-                YESBot.LOG.info("Connection was closed.");
+                Constants.LOG.info("Connection was closed.");
             });
             ws.onMessage(ctx -> {
-                JsonObject msg = GSON.fromJson(ctx.message(), JsonObject.class);
-
-                REQUESTS.get(msg.get("type").getAsString()).execute(ctx, msg);
+                JsonObject msg = Constants.GSON.fromJson(ctx.message(), JsonObject.class);
+                if (ctx.session.isOpen())
+                    REQUESTS.get(msg.get("type").getAsString()).execute(ctx, msg);
             });
         });
     }
@@ -94,8 +95,8 @@ public final class WebInterface {
             }
 
             JsonObject json = createMessage("console");
-            json.addProperty("msg", out);
-            ctx.send(GSON.toJson(json));
+            json.addProperty("message", out);
+            ctx.send(Constants.GSON.toJson(json));
         }
     }
 
@@ -124,7 +125,19 @@ public final class WebInterface {
         );
     }
 
-    private static void guildMsg(WsContext ctx, JsonObject obj) {
+    private static void consoleMsgs(WsContext ctx, JsonObject obj) {
+        JsonObject json = createMessage("console");
+
+        try {
+            json.addProperty("message", Constants.LOG_FILE.readAll());
+        } catch (IOException e) {
+
+        }
+
+        ctx.send(Constants.GSON.toJson(json));
+    }
+
+    private static void guildsMsg(WsContext ctx, JsonObject obj) {
         JsonObject json = createMessage("guilds");
 
         JsonArray guilds = new JsonArray();
@@ -138,7 +151,7 @@ public final class WebInterface {
         }
         json.add("guilds", guilds);
 
-        ctx.send(GSON.toJson(json));
+        ctx.send(Constants.GSON.toJson(json));
     }
 
     private static void channelsMsg(WsContext ctx, JsonObject obj) {
@@ -168,7 +181,7 @@ public final class WebInterface {
         }
         json.add("channels", channels);
 
-        ctx.send(GSON.toJson(json));
+        ctx.send(Constants.GSON.toJson(json));
     }
 
     private static void sendMsg(WsContext ctx, JsonObject obj) {
@@ -195,7 +208,7 @@ public final class WebInterface {
         });
         json.add("users", users);
 
-        ctx.send(GSON.toJson(json));
+        ctx.send(Constants.GSON.toJson(json));
     }
 
     private static void voiceJoinMsg(WsContext ctx, JsonObject obj) {
@@ -209,7 +222,7 @@ public final class WebInterface {
                 audioManager.openAudioConnection(voiceChannel);
             });
         } catch (NullPointerException e) {
-            YESBot.LOG.info("Wrong guildId was sent through voice_join message!");
+            Constants.LOG.info("Wrong guildId was sent through voice_join message!");
         }
     }
 
@@ -224,7 +237,7 @@ public final class WebInterface {
                 audioManager.closeAudioConnection();
             });
         } catch (NullPointerException e) {
-            YESBot.LOG.info("Wrong guildId was sent through voice_leave message!");
+            Constants.LOG.info("Wrong guildId was sent through voice_leave message!");
         }
     }
 
@@ -238,7 +251,7 @@ public final class WebInterface {
                     member.mute(true).queue();
             });
         } catch (NullPointerException e) {
-            YESBot.LOG.info("Wrong guildId was sent through voice_mute_all message!");
+            Constants.LOG.info("Wrong guildId was sent through voice_mute_all message!");
         }
     }
 
@@ -252,7 +265,7 @@ public final class WebInterface {
                     member.mute(false).queue();
             });
         } catch (NullPointerException e) {
-            YESBot.LOG.info("Wrong guildId was sent through voice_unmute_all message!");
+            Constants.LOG.info("Wrong guildId was sent through voice_unmute_all message!");
         }
     }
 
@@ -266,7 +279,7 @@ public final class WebInterface {
                 JDA = YESBot.createJDA();
                 TaskScheduler.refresh(JDA);
             } catch (Exception e) {
-                YESBot.LOG.error("Something went wrong while starting the JDA", e);
+                Constants.LOG.error("Something went wrong while starting the JDA", e);
             }
         } else {
             JDA.shutdown();

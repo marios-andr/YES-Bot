@@ -53,8 +53,6 @@ button {
     font-family: Consolas, monospace;
     color: #CCCCCC;
     background: #0C0C0C;
-    display: inline;
-    position: absolute;
-    left: 700px;
-    top: 10px;
+    display: block;
+    width: 100%;
 }

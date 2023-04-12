@@ -1,7 +1,7 @@
 package com.congueror.yesbot.command;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.RedditUser;
+import com.congueror.yesbot.Reddit;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Message;
@@ -112,7 +112,7 @@ public abstract class AbstractCommand extends ListenerAdapter {
 
     public void sendRandomPost(MessageReceivedEvent event, Message reference, String... subreddits) {
         int rand = new Random().nextInt(0, subreddits.length);
-        var post = RedditUser.getRandomSubmission(subreddits[rand]);
+        var post = Reddit.getRandomSubmission(subreddits[rand]);
 
         if (post.isNsfw() && !event.getChannel().asTextChannel().isNSFW()) {
             event.getChannel().sendMessage("Post was nsfw, but channel is not.").setMessageReference(reference).queue();
@@ -156,7 +156,7 @@ public abstract class AbstractCommand extends ListenerAdapter {
 
     public void sendRandomPost(SlashCommandInteractionEvent event, String... subreddits) {
         int rand = new Random().nextInt(0, subreddits.length);
-        var post = RedditUser.getRandomSubmission(subreddits[rand]);
+        var post = Reddit.getRandomSubmission(subreddits[rand]);
 
         if (post.isNsfw() && !event.getChannel().asTextChannel().isNSFW()) {
             event.getHook().sendMessage("Post was nsfw, but channel is not.").queue();

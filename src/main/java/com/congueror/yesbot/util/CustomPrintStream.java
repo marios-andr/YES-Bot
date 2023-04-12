@@ -1,4 +1,4 @@
-package com.congueror.yesbot.window;
+package com.congueror.yesbot.util;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -16,8 +16,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static com.congueror.yesbot.Constants.getJson;
-import static com.congueror.yesbot.Constants.optionalString;
+import static com.congueror.yesbot.Constants.*;
 
 @Command
 public class ChessComCommand extends AbstractCommand {
@@ -73,7 +72,7 @@ public class ChessComCommand extends AbstractCommand {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        var op = event.getOption("userName");
+        var op = event.getOption("user_name");
 
         if (op != null) {
             String username = op.getAsString();
@@ -95,11 +94,22 @@ public class ChessComCommand extends AbstractCommand {
                 String twitch = optionalString(json.get("twitch_url")); // optional
                 boolean verified = json.get("verified").getAsBoolean();
 
+                //https://api.chess.com/pub/player/yesntntnt/stats
+                JsonObject json2 = getJson("https://api.chess.com/pub/player/" + username + "/stats");
+                int daily = tryGetInt(json2, -1000, el -> el.getAsJsonObject().get("chess_daily").getAsJsonObject().get("last").getAsJsonObject().get("rating").getAsInt());
+                int blitz = tryGetInt(json2, -1000, el -> el.getAsJsonObject().get("chess_blitz").getAsJsonObject().get("last").getAsJsonObject().get("rating").getAsInt());
+                int bullet = tryGetInt(json2, -1000, el -> el.getAsJsonObject().get("chess_bullet").getAsJsonObject().get("last").getAsJsonObject().get("rating").getAsInt());
+                int rapid = tryGetInt(json2, -1000, el -> el.getAsJsonObject().get("chess_rapid").getAsJsonObject().get("last").getAsJsonObject().get("rating").getAsInt());
 
                 EmbedBuilder embed = new EmbedBuilder();
                 embed.setThumbnail(avatar);
                 embed.setTitle(username, url);
-                embed.setDescription((name == null ? username : name) + (title == null ? "" : ", " + title) + ", " + country + (location == null ? "" : " " + location));
+                String desc = (name == null ? username : name) +
+                        (title == null ? "" : ", " + title) +
+                        ", " +
+                        country +
+                        (location == null ? "" : " " + location);
+                embed.setDescription(desc);
                 embed.addField("UserId", id + "", true);
                 embed.addField("Followers", followers + "", true);
                 embed.addField("Status", status, true);
@@ -107,6 +117,16 @@ public class ChessComCommand extends AbstractCommand {
                 embed.addField("Joined", DateFormat.getDateInstance().format(joined), true);
                 if (twitch != null && is_streamer)
                     embed.addField("Twitch Url", twitch, false);
+
+                if (daily != -1000)
+                    embed.addField("Daily Rating", daily + "", true);
+                if (blitz != -1000)
+                    embed.addField("Blitz Rating", blitz + "", true);
+                if (bullet != -1000)
+                    embed.addField("Bullet Rating", bullet + "", true);
+                if (rapid != -1000)
+                    embed.addField("Rapid Rating", rapid + "", true);
+
                 if (verified)
                     embed.setFooter("Verified User");
 

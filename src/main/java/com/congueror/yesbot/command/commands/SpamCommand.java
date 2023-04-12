@@ -1,6 +1,6 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.YESBot;
+import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.Permission;
@@ -41,7 +41,7 @@ public class SpamCommand extends AbstractCommand {
                             try {
                                 Thread.sleep(1200);
                             } catch (Exception e) {
-                                YESBot.LOG.error("Thread Exception: ", e);
+                                Constants.LOG.error("Thread Exception: ", e);
                             }
                         }
 

@@ -1,13 +1,12 @@
 package com.congueror.yesbot.command.commands.fun;
 
-import com.congueror.yesbot.YESBot;
+import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -33,7 +32,7 @@ public class PickupCommand extends AbstractCommand {
                 }
                 myReader.close();
             } catch (Exception e) {
-                YESBot.LOG.error("An error occurred whilst parsing pickups.txt: ", e);
+                Constants.LOG.error("An error occurred whilst parsing pickups.txt: ", e);
             }
             int next = rand.nextInt(pickups.size());
             if (pickup.length != 2) {
@@ -57,7 +56,7 @@ public class PickupCommand extends AbstractCommand {
             }
             myReader.close();
         } catch (Exception e) {
-            YESBot.LOG.error("An error occurred whilst parsing pickups.txt: ", e);
+            Constants.LOG.error("An error occurred whilst parsing pickups.txt: ", e);
         }
 
         int next = rand.nextInt(pickups.size());

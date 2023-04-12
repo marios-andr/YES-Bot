@@ -33,8 +33,6 @@
     <img class="override_button_img" src="images/refresh.png" alt="">
 </button>
 
-<textarea id="console" readonly rows="10" cols="80"></textarea>
-
 <div id="channels">
     <select id="text_channel_select" hidden onchange="onTextChannelSelect()"></select>
     <select id="voice_channel_select" hidden onchange="onVoiceChannelSelect()"></select>
@@ -65,7 +63,9 @@
 
 </div>
 
-<script src="main.js"></script>
+<textarea id="console" readonly rows="30" cols="80" wrap="off"></textarea>
+
+<script src="bot.js"></script>
 </body>
 
 
