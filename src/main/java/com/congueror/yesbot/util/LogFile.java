@@ -4,6 +4,7 @@ import com.congueror.yesbot.Constants;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 public class LogFile {
@@ -23,7 +24,26 @@ public class LogFile {
         }
     }
 
-    public String readAll() throws IOException {
+    protected LogFile(String name) {
+        this.file = new File("./logs/" + name);
+    }
+
+    public static String[] getAll() {
+        File directory = new File("./logs/");
+
+        var logs = directory.listFiles(File::isFile);
+        return Arrays.stream(logs).map(File::getName).toArray(String[]::new);
+    }
+
+    public static String read(String name) throws IOException {
+        return new LogFile(name).read();
+    }
+
+    public String getName() {
+        return this.file.getName();
+    }
+
+    public String read() throws IOException {
         StringBuilder chars = new StringBuilder();
         try (FileReader fr = new FileReader(file); BufferedReader br = new BufferedReader(fr)) {
             int ch;
@@ -35,12 +55,6 @@ public class LogFile {
         }
 
         return chars.toString();
-
-        /*
-        FileReader reader = new FileReader(this.file);
-        char[] chars = new char[this.size];
-        reader.read(chars);
-        return chars;*/
     }
 
     public String write(String out) throws IOException {

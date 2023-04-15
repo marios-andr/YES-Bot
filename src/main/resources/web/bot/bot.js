@@ -5,8 +5,10 @@ let responses = new Map([
     ["guilds", addGuildButtons],
     ["channels", addChannelOptions],
     ["channel_users", addUserOptions],
-    ["console", appendConsoleMessage]
-])
+    ["console", appendConsoleMessage],
+    ["log_files", addLogFileOptions],
+    ["log_file_select", changeLogFile]
+]);
 
 
 ws.onmessage = msg => {
@@ -23,6 +25,9 @@ ws.onclose = () => {
 function init(data) {
     ws.send(JSON.stringify({
         type: "guilds"
+    }));
+    ws.send(JSON.stringify({
+        type: "log_files"
     }));
     ws.send(JSON.stringify({
         type: "console_msgs"
@@ -105,14 +110,41 @@ function addUserOptions(data) {
         option.value = e.mention;
 
         users.appendChild(option);
-    })
+    });
+}
+
+function addLogFileOptions(data) {
+    let files = id("log_files");
+    let current;
+
+    data.files.forEach(e => {
+        let option = document.createElement("option");
+        option.innerText = e.toString();
+        option.value = e.toString();
+
+        if (e.toString().includes("(current)"))
+            current = e.toString();
+
+        files.appendChild(option);
+    });
+
+    files.value = current;
+}
+
+function changeLogFile(data) {
+    let cnsl = id("console");
+
+    cnsl.value = "";
+    cnsl.value += data.message;
 }
 
 function appendConsoleMessage(data) {
     let cnsl = id("console");
+    let files = id("log_files");
 
-    console.log(data.message);
-    cnsl.value += data.message;
+    if (files.value.includes("(current)")) {
+        cnsl.value += data.message;
+    }
 }
 
 function onMoveButtonPress(direction) {
@@ -155,6 +187,15 @@ function onUserSelect() {
 
     let mention = users.value;
     area.value += mention;
+}
+
+function onLogFileSelect() {
+    let logfiles = id("log_files");
+
+    ws.send(JSON.stringify({
+        type: "log_file_select",
+        name: logfiles.value
+    }));
 }
 
 function onSendButtonPress() {

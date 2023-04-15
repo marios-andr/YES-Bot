@@ -1,5 +1,6 @@
 package com.congueror.yesbot;
 
+import com.congueror.yesbot.util.LogFile;
 import com.congueror.yesbot.util.MapBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -16,7 +17,10 @@ import net.dv8tion.jda.api.managers.AudioManager;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public final class WebInterface {
@@ -42,10 +46,12 @@ public final class WebInterface {
 
     private static final Map<String, Message> REQUESTS = new MapBuilder<String, Message>(new HashMap<>())
             .put("console_msgs", WebInterface::consoleMsgs)
+            .put("log_files", WebInterface::logFilesMsg)
             .put("guilds", WebInterface::guildsMsg)
             .put("channels", WebInterface::channelsMsg)
             .put("send_msg", WebInterface::sendMsg)
             .put("channel_users", WebInterface::channelUsersMsg)
+            .put("log_file_select", WebInterface::logFileSelectMsg)
             .put("voice_join", WebInterface::voiceJoinMsg)
             .put("voice_leave", WebInterface::voiceLeaveMsg)
             .put("voice_mute_all", WebInterface::voiceMuteAllMsg)
@@ -72,7 +78,7 @@ public final class WebInterface {
                     Constants.LOG.info("Successfully connected to client.");
                     ctx.session.setIdleTimeout(Duration.of(1, ChronoUnit.MINUTES));
                     CONTEXTS.add(ctx);
-                    ctx.send(initMsg(ctx.getSessionId()));
+                    ctx.send(Map.of("type", "initialize"));
                 }
             });
             ws.onClose(ctx -> {
@@ -118,21 +124,29 @@ public final class WebInterface {
         return obj;
     }
 
-    private static Object initMsg(String id) {
-        return Map.of(
-                "type", "initialize",
-                "id", id
-        );
-    }
-
     private static void consoleMsgs(WsContext ctx, JsonObject obj) {
         JsonObject json = createMessage("console");
 
         try {
-            json.addProperty("message", Constants.LOG_FILE.readAll());
-        } catch (IOException e) {
+            json.addProperty("message", Constants.LOG_FILE.read());
+        } catch (IOException ignored) {
 
         }
+
+        ctx.send(Constants.GSON.toJson(json));
+    }
+
+    private static void logFilesMsg(WsContext ctx, JsonObject obj) {
+        JsonObject json = createMessage("log_files");
+
+        JsonArray array = new JsonArray();
+        for (String s : LogFile.getAll()) {
+            if (Constants.LOG_FILE.getName().equals(s))
+                array.add(s + "(current)");
+            else
+                array.add(s);
+        }
+        json.add("files", array);
 
         ctx.send(Constants.GSON.toJson(json));
     }
@@ -207,6 +221,23 @@ public final class WebInterface {
             users.add(o);
         });
         json.add("users", users);
+
+        ctx.send(Constants.GSON.toJson(json));
+    }
+
+    private static void logFileSelectMsg(WsContext ctx, JsonObject obj) {
+        String name = obj.get("name").getAsString();
+        if (name.endsWith("(current)"))
+            name = name.replace("(current)", "");
+
+
+        JsonObject json = createMessage("log_file_select");
+
+        try {
+            json.addProperty("message", LogFile.read(name));
+        } catch (IOException ignored) {
+
+        }
 
         ctx.send(Constants.GSON.toJson(json));
     }

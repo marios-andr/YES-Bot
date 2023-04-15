@@ -18,6 +18,8 @@ import org.bson.Document;
 import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class Mongo {
 
@@ -45,10 +47,9 @@ public final class Mongo {
                 .append("chessWins", 0)
                 .append("chessLosses", 0)
                 .append("chessTies", 0)
-                .append("ownedBoards", new HashSet<>(List.of("DEFAULT")))
                 .append("selectedBoard", "DEFAULT")
-                .append("ownedPieces", new HashSet<>(List.of("DEFAULT")))
-                .append("selectedPiece", "DEFAULT");
+                .append("selectedPiece", "DEFAULT")
+                .append("ownedItems", new HashSet<>(List.of("CP#0", "CB#0")));
     }
 
     public static Document getUserDocument(String snowflake) {
@@ -75,8 +76,28 @@ public final class Mongo {
         return ChessBoardDecor.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
     }
 
+    public static void setSelectedBoard(String snowflake, String board) {
+        try {
+            ChessBoardDecor.valueOf(board.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        putUser(snowflake, "selectedBoard", board.toUpperCase());
+    }
+
     public static ChessPieceDecor getSelectedPiece(String snowflake) {
         return ChessPieceDecor.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
+    }
+
+    public static void setSelectedPiece(String snowflake, String piece) {
+        try {
+            ChessPieceDecor.valueOf(piece.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        putUser(snowflake, "selectedBoard", piece.toUpperCase());
     }
 
     public static void addChessWin(String snowflake) {
@@ -100,48 +121,14 @@ public final class Mongo {
         putUser(snowflake, "points", points + 10);
     }
 
-    public static void addBoard(String snowflake, String board) {
-        HashSet<String> ownedBoards = getUser(snowflake, "ownedBoards");
-        try {
-            ChessBoardDecor.valueOf(board.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        ownedBoards.add(board.toUpperCase());
-        putUser(snowflake, "ownedBoards", ownedBoards);
+    public static HashSet<String> getOwnedItems(String snowflake) {
+        return getUser(snowflake, "ownedItems");
     }
 
-    public static void changeBoard(String snowflake, String board) {
-        try {
-            ChessBoardDecor.valueOf(board.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        putUser(snowflake, "selectedBoard", board.toUpperCase());
-    }
-
-    public static void addPiece(String snowflake, String piece) {
-        HashSet<String> ownedPieces = getUser(snowflake, "ownedPieces");
-        try {
-            ChessPieceDecor.valueOf(piece.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        ownedPieces.add(piece.toUpperCase());
-        putUser(snowflake, "ownedPieces", ownedPieces);
-    }
-
-    public static void changePieces(String snowflake, String piece) {
-        try {
-            ChessPieceDecor.valueOf(piece.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        putUser(snowflake, "selectedBoard", piece.toUpperCase());
+    public static void addOwnedItem(String snowflake, String code) {
+        HashSet<String> items = getUser(snowflake, "ownedItems");
+        items.add(code);
+        putUser(snowflake, "ownedItems", items);
     }
 
     private static Document createGuild(String snowflake) {

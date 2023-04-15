@@ -8,6 +8,7 @@ import java.io.File;
 public enum ChessBoardDecor implements Shop.ShopEntry {
 
     DEFAULT(0, new Color(125, 148, 93), new Color(238, 238, 213)),
+    RED(0, new Color(0xBA5546), new Color(0xF0D8BF)),
     CUSTOM(1300, ""),
     ;
 
@@ -29,6 +30,11 @@ public enum ChessBoardDecor implements Shop.ShopEntry {
         this.tileLocation = null;
         this.firstColor = firstColor;
         this.secondColor = secondColor;
+    }
+
+    @Override
+    public String idGroup() {
+        return "CB#";
     }
 
     @Override

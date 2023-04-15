@@ -2,8 +2,9 @@ package com.congueror.yesbot;
 
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
+import com.congueror.yesbot.command.chess.ChessBoardDecor;
+import com.congueror.yesbot.command.chess.ChessPieceDecor;
 import com.congueror.yesbot.mongodb.Mongo;
-import com.congueror.yesbot.util.CustomPrintStream;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -38,8 +39,6 @@ public class YESBot {
 
             WebInterface.initialize(jda, guilds);
 
-            //SetupWindow.setup(jda, guilds);
-
             TaskScheduler.initialize(jda);
 
         } catch (Exception e) {
@@ -58,7 +57,7 @@ public class YESBot {
                         GatewayIntent.GUILD_MESSAGE_REACTIONS,
                         GatewayIntent.GUILD_MEMBERS,
                         GatewayIntent.GUILD_PRESENCES)
-                .enableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.MEMBER_OVERRIDES)
+                .enableCache(CacheFlag.VOICE_STATE)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .addEventListeners(new BotListenerAdapter())
                 .setActivity(Activity.watching("Star Wars: Episode III - Revenge of the Sith"))
@@ -98,6 +97,19 @@ public class YESBot {
                 commands.addCommands(c.createCommand()).queue();
             });
             commands.queue();
+        }
+    }
+
+    private static void setupShopEntries() {
+        int i = 0;
+        for (ChessBoardDecor value : ChessBoardDecor.values()) {
+            Constants.SHOP_ENTRIES.put(value.idGroup() + i, value);
+            i++;
+        }
+        i = 0;
+        for (ChessPieceDecor value : ChessPieceDecor.values()) {
+            Constants.SHOP_ENTRIES.put(value.idGroup() + i, value);
+            i++;
         }
     }
 

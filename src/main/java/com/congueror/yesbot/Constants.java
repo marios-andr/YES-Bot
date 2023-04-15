@@ -14,6 +14,8 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public final class Constants {
@@ -27,7 +29,7 @@ public final class Constants {
     public static boolean LOCKED = false;
     public static boolean STOP = false;
     public static final ArrayList<AbstractCommand> COMMANDS = new ArrayList<>();
-    public static final ArrayList<Shop.ShopEntry> SHOP_ENTRIES = new ArrayList<>();
+    public static final Map<String, Shop.ShopEntry> SHOP_ENTRIES = new HashMap<>();
 
     private Constants() {
     }
@@ -39,6 +41,8 @@ public final class Constants {
     public static void init() {
         System.setErr(new CustomPrintStream(System.err, Constants::onLogMessage));
         System.setOut(new CustomPrintStream(System.out, Constants::onLogMessage));
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> LOG.info("System was shutdown.")));
 
         File file = new File("./settings.json");
         if (!file.exists()) {
@@ -67,7 +71,6 @@ public final class Constants {
 
             LOG.error("Settings json was missing and was therefore created, fill out the necessary information and launch the application again.");
             System.exit(0);
-
         }
 
         try (FileReader fr = new FileReader(file)) {
@@ -145,14 +148,9 @@ public final class Constants {
         return false;
     }
 
-    public record Settings(String token, String bot_snowflake, String owner_snowflake,
-                           String mongo_link,
-                           String reddit_username, String reddit_password, String reddit_client,
-                           String reddit_secret,
-                           String steam_token, User[] credentials) {
+    public record Settings(String token, String bot_snowflake, String owner_snowflake, String mongo_link,
+                           String reddit_username, String reddit_password, String reddit_client, String reddit_secret,
+                           String steam_token, User[] credentials) {}
 
-    }
-
-    public record User(String name, String password) {
-    }
+    public record User(String name, String password) {}
 }

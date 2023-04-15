@@ -1,8 +1,5 @@
 package com.congueror.yesbot.util;
 
-import org.apache.commons.collections4.MapUtils;
-
-import java.util.HashMap;
 import java.util.Map;
 
 public class MapBuilder<K, V> {

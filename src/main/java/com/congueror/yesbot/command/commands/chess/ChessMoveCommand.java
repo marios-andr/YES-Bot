@@ -5,7 +5,6 @@ import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.chess.ChessBoard;
 import com.congueror.yesbot.command.chess.ChessPiece;
 import com.congueror.yesbot.command.chess.ChessPosition;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -15,10 +14,7 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
 
 @Command
 public class ChessMoveCommand extends AbstractCommand {

@@ -33,7 +33,6 @@ dependencies {
     implementation 'org.mongodb:mongodb-driver-sync:4.7.1'
     implementation "net.dean.jraw:JRAW:1.1.0"
 
-    //implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.0.0'
     implementation 'com.google.code.gson:gson:2.10'
 
     implementation 'org.reflections:reflections:0.10.2'
@@ -44,10 +43,6 @@ dependencies {
     //implementation files('libraries/slf4j-simple-2.0.4.jar')
 
     implementation 'ch.qos.logback:logback-classic:1.4.5'
-    implementation 'org.ow2.asm:asm:9.3'
-    implementation group: 'org.javassist', name: 'javassist', version: '3.29.2-GA'
-    implementation 'commons-io:commons-io:2.11.0'
-
 }
 
 application {
