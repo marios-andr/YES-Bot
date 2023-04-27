@@ -27,8 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.congueror.yesbot.Constants.getJson;
-import static com.congueror.yesbot.Constants.optionalString;
+import static com.congueror.yesbot.Constants.*;
 
 public class TaskScheduler {
 
@@ -130,7 +129,12 @@ public class TaskScheduler {
 
             List<EpicStorePromotion> proms = new ArrayList<>();
             for (JsonElement jsonElement : arr) {
-                EpicStorePromotion p = EpicStorePromotion.of(jsonElement);
+                EpicStorePromotion p = null;
+                try {
+                    p = EpicStorePromotion.of(jsonElement);
+                } catch (Exception e) {
+                    LOG.error("An error occurred while parsing epic store promotion", e);
+                }
                 if (p == null)
                     continue;
                 proms.add(p);
@@ -164,7 +168,7 @@ public class TaskScheduler {
                     url = "https://store.epicgames.com/en-US/p/" + el.getAsJsonObject().get("pageSlug").getAsString();
                     break urlAssign;
                 }
-                url = "https://store.epicgames.com/en-US/p/" + o.get("urlSlug").getAsString();
+                url = "https://store.epicgames.com/en-US/p/" + o.get("productSlug").getAsString();
             }
 
             String title = optionalString(o.get("title"));
@@ -189,6 +193,10 @@ public class TaskScheduler {
                     endDate = el.getAsJsonObject().get("endDate").getAsString();
                     break;
                 }
+            }
+
+            if (endDate.isEmpty()) {
+                return null;
             }
 
             TemporalAccessor ta1 = DateTimeFormatter.ISO_INSTANT.parse(endDate);

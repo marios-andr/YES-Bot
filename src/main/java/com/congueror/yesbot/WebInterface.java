@@ -90,6 +90,13 @@ public final class WebInterface {
                     REQUESTS.get(msg.get("type").getAsString()).execute(ctx, msg);
             });
         });
+
+        APP.get("/calculator/{send}", ctx -> {
+            if (!ctx.pathParam("send").equals("something") || ctx.queryParam("in") == null)
+                return;
+
+
+        });
     }
 
     public static void sendToConsole(String out) {
