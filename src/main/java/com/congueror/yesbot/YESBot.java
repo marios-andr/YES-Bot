@@ -79,25 +79,19 @@ public class YESBot {
             }
         }
 
-        if (args.length >= 1 && args[0].equals("--createCommands")) {
-            var guild = Constants.COMMANDS.stream().filter(command -> Objects.equals(command.getScope(), AbstractCommand.Scope.GUILD)).toList();
-            var global = Constants.COMMANDS.stream().filter(command -> Objects.equals(command.getScope(), AbstractCommand.Scope.GLOBAL)).toList();
+        //if (args.length >= 1 && args[0].equals("--createCommands"))
+        var guild = Constants.COMMANDS.stream().filter(command -> Objects.equals(command.getScope(), AbstractCommand.Scope.GUILD)).toList();
+        var global = Constants.COMMANDS.stream().filter(command -> Objects.equals(command.getScope(), AbstractCommand.Scope.GLOBAL)).toList();
 
-            jda.getGuilds().forEach(g -> {
-                //g.updateCommands().queue();
-
-                var commands = g.updateCommands();
-                guild.forEach(c -> commands.addCommands(c.createCommand()));
-                commands.queue();
-            });
-
-            //jda.updateCommands().queue();
-            var commands = jda.updateCommands();
-            global.forEach(c -> {
-                commands.addCommands(c.createCommand()).queue();
-            });
+        jda.getGuilds().forEach(g -> {
+            var commands = g.updateCommands();
+            guild.forEach(c -> commands.addCommands(c.createCommand()));
             commands.queue();
-        }
+        });
+
+        var commands = jda.updateCommands();
+        global.forEach(c -> commands.addCommands(c.createCommand()).queue());
+        commands.queue();
     }
 
     private static void setupShopEntries() {
@@ -114,12 +108,15 @@ public class YESBot {
     }
 
     private static void setupSystemTray() {
+        if (!SystemTray.isSupported())
+            return;
+
         SystemTray t = SystemTray.getSystemTray();
         BufferedImage image = null;
 
         try {
             //noinspection ConstantConditions
-            image = ImageIO.read(YESBot.class.getClassLoader().getResource("web/bot/images/send.png"));
+            image = ImageIO.read(YESBot.class.getClassLoader().getResource("web/images/send.png"));
         } catch (IOException e3) {
             e3.printStackTrace();
         }

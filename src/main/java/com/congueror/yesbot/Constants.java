@@ -3,6 +3,7 @@ package com.congueror.yesbot;
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.shop.Shop;
 import com.congueror.yesbot.util.CustomPrintStream;
+import com.congueror.yesbot.util.HtmlDocument;
 import com.congueror.yesbot.util.LogFile;
 import com.google.gson.*;
 import com.google.gson.internal.Streams;
@@ -109,6 +110,17 @@ public final class Constants {
             var json = JsonParser.parseReader(reader);
             return json.getAsJsonObject();
         } catch (Exception e) {
+            LOG.error("Something went wrong while retrieving json " + url, e);
+            return null;
+        }
+    }
+
+    public static HtmlDocument getHtml(String url) {
+        try (InputStream input = new URL(url).openStream()) {
+            InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8);
+            return HtmlDocument.parse(reader);
+        } catch (Exception e) {
+            LOG.error("Something went wrong while retrieving html " + url, e);
             return null;
         }
     }

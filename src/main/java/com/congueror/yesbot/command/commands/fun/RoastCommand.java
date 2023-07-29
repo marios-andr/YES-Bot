@@ -33,7 +33,7 @@ public class RoastCommand extends AbstractCommand {
                 }
                 myReader.close();
             } catch (Exception e) {
-                Constants.LOG.error("An error occurred whilst attempting to parse roasts.txt: ", e);
+                Constants.LOG.error("An error occurred whilst attempting to update roasts.txt: ", e);
             }
             int next = rand.nextInt(roasts.size());
             if (roast.length != 2) {
@@ -57,7 +57,7 @@ public class RoastCommand extends AbstractCommand {
             }
             myReader.close();
         } catch (Exception e) {
-            Constants.LOG.error("An error occurred whilst attempting to parse roasts.txt: ", e);
+            Constants.LOG.error("An error occurred whilst attempting to update roasts.txt: ", e);
         }
 
         int next = rand.nextInt(roasts.size());

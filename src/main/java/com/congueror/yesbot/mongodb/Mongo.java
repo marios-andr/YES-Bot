@@ -1,7 +1,7 @@
 package com.congueror.yesbot.mongodb;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.TaskScheduler;
+import com.congueror.yesbot.command.announcements.Announcement;
 import com.congueror.yesbot.command.chess.ChessBoardDecor;
 import com.congueror.yesbot.command.chess.ChessPieceDecor;
 import com.mongodb.ConnectionString;
@@ -15,9 +15,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
-import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public final class Mongo {
 
@@ -153,30 +151,43 @@ public final class Mongo {
         return (Item) doc.get(field);
     }
 
+    public static <Item> Item getGuildOrDefault(String snowflake, String field, Item default_) {
+        Item i = getGuild(snowflake, field);
+        if (i == null) {
+            putGuild(snowflake, field, default_);
+            return default_;
+        } else
+            return i;
+    }
+
     public static <Item> void putGuild(String snowflake, String field, Item item) {
         Document doc = getGuildDocument(snowflake);
         doc.put(field, item);
         guilds.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static long getPromotionsChannel(String snowflake) {
-        return getGuild(snowflake, "promotions_channel");
+    public static Map<String, Long> getAnnouncements(String snowflake) {
+        return getGuildOrDefault(snowflake, "announcements", new HashMap<>());
     }
 
-    public static void setPromotionsChannel(String snowflake, long id) {
-        putGuild(snowflake, "promotions_channel", id);
+    public static void addAnnouncements(String snowflake, String type, long channel) {
+        var a = getAnnouncements(snowflake);
+        a.put(type, channel);
+        putGuild(snowflake, "announcements", a);
     }
 
-    @Nullable
-    public static TaskScheduler.PromotionCollection getLastPromotions(String snowflake) {
-        Document a = getGuild(snowflake, "last_promotions");
-        if (a == null)
-            return null;
-        return TaskScheduler.PromotionCollection.of(a);
+    public static List<Announcement> getLastAnnouncements(String snowflake) {
+        ArrayList<Document> a = getGuildOrDefault(snowflake, "last_announcements", new ArrayList<>());
+        return a.stream().map(Announcement::of).toList();
     }
 
-    public static void setLastPromotions(String snowflake, TaskScheduler.PromotionCollection promos) {
-        putGuild(snowflake, "last_promotions", promos);
+    public static void setLastAnnouncements(String snowflake, List<Announcement> announcements) {
+        var a = announcements.stream().map(announcement -> {
+            Document d = new Document("class", announcement.getClass().getName());
+            d.put("announcement", announcement);
+            return d;
+        }).toList();
+        putGuild(snowflake, "last_announcements", a);
     }
 
     private Mongo() {

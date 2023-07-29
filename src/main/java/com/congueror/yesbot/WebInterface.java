@@ -1,7 +1,6 @@
 package com.congueror.yesbot;
 
 import com.congueror.yesbot.util.LogFile;
-import com.congueror.yesbot.util.MapBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.javalin.Javalin;
@@ -22,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static com.congueror.yesbot.Constants.LOG;
 
 public final class WebInterface {
 
@@ -44,22 +45,22 @@ public final class WebInterface {
         }
     };
 
-    private static final Map<String, Message> REQUESTS = new MapBuilder<String, Message>(new HashMap<>())
-            .put("console_msgs", WebInterface::consoleMsgs)
-            .put("log_files", WebInterface::logFilesMsg)
-            .put("guilds", WebInterface::guildsMsg)
-            .put("channels", WebInterface::channelsMsg)
-            .put("send_msg", WebInterface::sendMsg)
-            .put("channel_users", WebInterface::channelUsersMsg)
-            .put("log_file_select", WebInterface::logFileSelectMsg)
-            .put("voice_join", WebInterface::voiceJoinMsg)
-            .put("voice_leave", WebInterface::voiceLeaveMsg)
-            .put("voice_mute_all", WebInterface::voiceMuteAllMsg)
-            .put("voice_unmute_all", WebInterface::voiceUnmuteAllMsg)
-            .put("lock", WebInterface::lockMsg)
-            .put("shutdown", WebInterface::shutdownMsg)
-            .put("refresh", WebInterface::refreshMsg)
-            .build();
+    private static final Map<String, Message> REQUESTS = new HashMap<>() {{
+            put("console_msgs", WebInterface::consoleMsgs);
+            put("log_files", WebInterface::logFilesMsg);
+            put("guilds", WebInterface::guildsMsg);
+            put("channels", WebInterface::channelsMsg);
+            put("send_msg", WebInterface::sendMsg);
+            put("channel_users", WebInterface::channelUsersMsg);
+            put("log_file_select", WebInterface::logFileSelectMsg);
+            put("voice_join", WebInterface::voiceJoinMsg);
+            put("voice_leave", WebInterface::voiceLeaveMsg);
+            put("voice_mute_all", WebInterface::voiceMuteAllMsg);
+            put("voice_unmute_all", WebInterface::voiceUnmuteAllMsg);
+            put("lock", WebInterface::lockMsg);
+            put("shutdown", WebInterface::shutdownMsg);
+            put("refresh", WebInterface::refreshMsg);
+    }};
 
     public static void initialize(JDA jda, List<Guild> guilds) {
         JDA = jda;
@@ -314,12 +315,14 @@ public final class WebInterface {
     private static void shutdownMsg(WsContext ctx, JsonObject obj) {
         if (JDA == null || JDA.getStatus().equals(net.dv8tion.jda.api.JDA.Status.SHUTDOWN)) {
             try {
+                LOG.info("An administrator is manually booting up the bot...");
                 JDA = YESBot.createJDA();
                 TaskScheduler.refresh(JDA);
             } catch (Exception e) {
                 Constants.LOG.error("Something went wrong while starting the JDA", e);
             }
         } else {
+            LOG.info("An administrator is manually shutting down the bot...");
             JDA.shutdown();
             TaskScheduler.refresh(JDA);
             JDA = null;
@@ -327,6 +330,7 @@ public final class WebInterface {
     }
 
     private static void refreshMsg(WsContext ctx, JsonObject obj) {
+        LOG.info("An administrator is manually refreshing schedules...");
         TaskScheduler.refresh(JDA);
     }
 
