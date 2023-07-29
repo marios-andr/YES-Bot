@@ -1,27 +1,29 @@
 package com.congueror.yesbot.command.chess;
 
 public enum ChessPiece {
-    W_PAWN(0, 0, 146, 146),
-    W_ROOK(146, 0, 292, 146),
-    W_KNIGHT(292, 0, 438, 146),
-    W_BISHOP(438, 0, 584, 146),
-    W_QUEEN(584, 0, 730, 146),
-    W_KING(730, 0, 876, 146),
+    W_PAWN(Type.PAWN, 0, 0, 146, 146),
+    W_ROOK(Type.ROOK, 146, 0, 292, 146),
+    W_KNIGHT(Type.KNIGHT, 292, 0, 438, 146),
+    W_BISHOP(Type.BISHOP, 438, 0, 584, 146),
+    W_QUEEN(Type.QUEEN, 584, 0, 730, 146),
+    W_KING(Type.KING, 730, 0, 876, 146),
 
-    B_PAWN(0, 146, 146, 292),
-    B_ROOK(146, 146, 292, 292),
-    B_KNIGHT(292, 146, 438, 292),
-    B_BISHOP(438, 146, 584, 292),
-    B_QUEEN(584, 146, 730, 292),
-    B_KING(730, 146, 876, 292)
+    B_PAWN(Type.PAWN, 0, 146, 146, 292),
+    B_ROOK(Type.ROOK, 146, 146, 292, 292),
+    B_KNIGHT(Type.KNIGHT, 292, 146, 438, 292),
+    B_BISHOP(Type.BISHOP, 438, 146, 584, 292),
+    B_QUEEN(Type.QUEEN, 584, 146, 730, 292),
+    B_KING(Type.KING, 730, 146, 876, 292)
     ;
 
+    public final Type type;
     public final int x1;
     public final int y1;
     public final int x2;
     public final int y2;
 
-    ChessPiece(int x1, int y1, int x2, int y2) {
+    ChessPiece(Type type, int x1, int y1, int x2, int y2) {
+        this.type = type;
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -56,5 +58,20 @@ public enum ChessPiece {
 
     public boolean isRook() {
         return this.equals(W_ROOK) || this.equals(B_ROOK);
+    }
+
+    public enum Type {
+        PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING;
+
+        ChessPiece getPiece(int turn) {
+            return switch (this) {
+                case PAWN -> turn == 0 ? ChessPiece.W_PAWN : ChessPiece.B_PAWN;
+                case ROOK -> turn == 0 ? ChessPiece.W_ROOK : ChessPiece.B_ROOK;
+                case KNIGHT -> turn == 0 ? ChessPiece.W_KNIGHT : ChessPiece.B_KNIGHT;
+                case BISHOP -> turn == 0 ? ChessPiece.W_BISHOP : ChessPiece.B_BISHOP;
+                case QUEEN -> turn == 0 ? ChessPiece.W_QUEEN : ChessPiece.B_QUEEN;
+                case KING -> turn == 0 ? ChessPiece.W_KING : ChessPiece.B_KING;
+            };
+        }
     }
 }

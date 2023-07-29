@@ -1,20 +1,26 @@
 package com.congueror.yesbot.command.commands;
 
-import com.congueror.yesbot.mongodb.Mongo;
 import com.congueror.yesbot.command.Command;
+import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.command.AbstractCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.bson.Document;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
-public class ProfileCommand implements Command {
+@Command
+public class ProfileCommand extends AbstractCommand {
 
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] profile = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] profile = getInput(event.getMessage());
         if (check(profile)) {
             Message reference = event.getMessage();
             User player;
@@ -39,17 +45,43 @@ public class ProfileCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        var op = event.getOption("target");
+
+        User player;
+        if (op == null) {
+            player = event.getUser();
+        } else {
+            player = op.getAsUser();
+        }
+
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("**__" + player.getAsTag() + "__**");
+        embed.setThumbnail(player.getEffectiveAvatarUrl());
+        embed.setColor(Color.RED);
+        Document doc = Mongo.getUserDocument(player.getId());
+        for (var a : doc.keySet()) {
+            if (a.equals("_id") || a.equals("id"))
+                continue;
+            embed.addField(a + ":", doc.get(a).toString(), true);
+        }
+        event.getHook().sendMessageEmbeds(embed.build()).queue();
+    }
+
+    @Override
     public String getName() {
         return "profile";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[]{"target"};
+    public OptionData[] getArgs() {
+        return new OptionData[]{
+                new OptionData(OptionType.USER, "target", "Target for this command", false)
+        };
     }
 
     @Override
-    public String getDescription() {
+    public String getCommandDescription() {
         return "Displays relevant information about the player.";
     }
 }

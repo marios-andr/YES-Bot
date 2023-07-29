@@ -1,24 +1,28 @@
 package com.congueror.yesbot.command.commands.fun;
 
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.apache.commons.lang3.StringUtils;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-
-public class RedditCommand implements Command {
+@Command
+public class RedditCommand extends AbstractCommand {
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] reddit = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] reddit = getInput(event.getMessage());
         if (check(reddit)) {
             Message reference = event.getMessage();
-
-            if (reddit[1].equals("nsfw"))
-                sendRandomPost(event, reference, "nsfw", "bonermaterial", "iWantToFuckHer", "gonewild", "nudes", "legalteens");
-            else
-                sendRandomPost(event, reference, reddit[1]);
+            sendRandomPost(event, reference, reddit[1]);
         }
+    }
+
+    @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        sendRandomPost(event, event.getOption("subreddit").getAsString());
     }
 
     @Override
@@ -27,15 +31,15 @@ public class RedditCommand implements Command {
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[]{"subreddit"};
+    public OptionData[] getArgs() {
+        return new OptionData[]{
+                new OptionData(OptionType.STRING, "subreddit", "Target subreddit.", true)
+        };
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("Send a random post from a subreddit");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "Send a random post from a subreddit";
     }
 
     @Override

@@ -4,3 +4,5 @@
 /build/classes/java/main/
 /.idea/
 /src/main/resources/.env
+/logs/
+/settings.json

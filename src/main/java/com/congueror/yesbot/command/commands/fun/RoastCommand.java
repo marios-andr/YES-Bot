@@ -1,8 +1,13 @@
 package com.congueror.yesbot.command.commands.fun;
 
+import com.congueror.yesbot.Constants;
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.apache.commons.lang3.StringUtils;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -10,11 +15,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class RoastCommand implements Command {
+@Command
+public class RoastCommand extends AbstractCommand {
 
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] roast = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] roast = getInput(event.getMessage());
         if (check(roast)) {
             ArrayList<String> roasts = new ArrayList<>();
             Random rand = new Random();
@@ -27,8 +33,7 @@ public class RoastCommand implements Command {
                 }
                 myReader.close();
             } catch (Exception e) {
-                System.out.println("An error occurred whilst attempting to parse roasts.txt ");
-                e.printStackTrace();
+                Constants.LOG.error("An error occurred whilst attempting to update roasts.txt: ", e);
             }
             int next = rand.nextInt(roasts.size());
             if (roast.length != 2) {
@@ -40,21 +45,45 @@ public class RoastCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        ArrayList<String> roasts = new ArrayList<>();
+        Random rand = new Random();
+        try {
+            InputStream path = getClass().getResourceAsStream("/text/roasts.txt");
+            BufferedReader myReader = new BufferedReader(new InputStreamReader(path));
+            String string;
+            while ((string = myReader.readLine()) != null) {
+                roasts.add(string);
+            }
+            myReader.close();
+        } catch (Exception e) {
+            Constants.LOG.error("An error occurred whilst attempting to update roasts.txt: ", e);
+        }
+
+        int next = rand.nextInt(roasts.size());
+        var op = event.getOption("target");
+        if (op != null) {
+            event.getHook().sendMessage(op.getAsUser().getAsMention() + " " + roasts.get(next)).queue();
+        } else {
+            event.getHook().sendMessage(roasts.get(next)).queue();
+        }
+    }
+
+    @Override
     public String getName() {
         return "roast";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[] {"target"};
+    public OptionData[] getArgs() {
+        return new OptionData[] {
+                new OptionData(OptionType.USER, "target", "The person you want to roast.", false)
+        };
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("Roast someone who annoys you. Guaranteed burns.");
-        desc.add("target: Ping the person you want to roast. Not necessary.");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "Roast someone who annoys you. Guaranteed burns.";
     }
 
     @Override

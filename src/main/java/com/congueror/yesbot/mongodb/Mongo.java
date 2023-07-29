@@ -1,9 +1,9 @@
 package com.congueror.yesbot.mongodb;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.MessageScheduler;
-import com.congueror.yesbot.command.chess.ChessBoardType;
-import com.congueror.yesbot.command.chess.ChessPieceType;
+import com.congueror.yesbot.command.announcements.Announcement;
+import com.congueror.yesbot.command.chess.ChessBoardDecor;
+import com.congueror.yesbot.command.chess.ChessPieceDecor;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerApi;
@@ -15,9 +15,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
-import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 public final class Mongo {
 
@@ -25,7 +23,7 @@ public final class Mongo {
     private static MongoCollection<Document> guilds;
 
     public static void initialize() {
-        ConnectionString connectionString = new ConnectionString("mongodb+srv://yesbot:" + Constants.getEnv("MONGO_PASSWORD") + "@yesbot.hd25z.mongodb.net/?retryWrites=true&w=majority");
+        ConnectionString connectionString = new ConnectionString(Constants.getSettings().mongo_link());
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
                 .serverApi(ServerApi.builder()
@@ -34,6 +32,7 @@ public final class Mongo {
                 .build();
         MongoClient mongoClient = MongoClients.create(settings);
         MongoDatabase database = mongoClient.getDatabase("users");
+
         users = database.getCollection("users");
         guilds = database.getCollection("guilds");
     }
@@ -44,10 +43,9 @@ public final class Mongo {
                 .append("chessWins", 0)
                 .append("chessLosses", 0)
                 .append("chessTies", 0)
-                .append("ownedBoards", new HashSet<>(List.of("DEFAULT")))
                 .append("selectedBoard", "DEFAULT")
-                .append("ownedPieces", new HashSet<>(List.of("DEFAULT")))
-                .append("selectedPiece", "DEFAULT");
+                .append("selectedPiece", "DEFAULT")
+                .append("ownedItems", new HashSet<>(List.of("CP#0", "CB#0")));
     }
 
     public static Document getUserDocument(String snowflake) {
@@ -70,12 +68,32 @@ public final class Mongo {
         users.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static ChessBoardType getSelectedBoard(String snowflake) {
-        return ChessBoardType.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
+    public static ChessBoardDecor getSelectedBoard(String snowflake) {
+        return ChessBoardDecor.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
     }
 
-    public static ChessPieceType getSelectedPiece(String snowflake) {
-        return ChessPieceType.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
+    public static void setSelectedBoard(String snowflake, String board) {
+        try {
+            ChessBoardDecor.valueOf(board.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        putUser(snowflake, "selectedBoard", board.toUpperCase());
+    }
+
+    public static ChessPieceDecor getSelectedPiece(String snowflake) {
+        return ChessPieceDecor.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
+    }
+
+    public static void setSelectedPiece(String snowflake, String piece) {
+        try {
+            ChessPieceDecor.valueOf(piece.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return;
+        }
+        putUser(snowflake, "selectedBoard", piece.toUpperCase());
     }
 
     public static void addChessWin(String snowflake) {
@@ -99,48 +117,14 @@ public final class Mongo {
         putUser(snowflake, "points", points + 10);
     }
 
-    public static void addBoard(String snowflake, String board) {
-        HashSet<String> ownedBoards = getUser(snowflake, "ownedBoards");
-        try {
-            ChessBoardType.valueOf(board.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        ownedBoards.add(board.toUpperCase());
-        putUser(snowflake, "ownedBoards", ownedBoards);
+    public static HashSet<String> getOwnedItems(String snowflake) {
+        return getUser(snowflake, "ownedItems");
     }
 
-    public static void changeBoard(String snowflake, String board) {
-        try {
-            ChessBoardType.valueOf(board.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        putUser(snowflake, "selectedBoard", board.toUpperCase());
-    }
-
-    public static void addPiece(String snowflake, String piece) {
-        HashSet<String> ownedPieces = getUser(snowflake, "ownedPieces");
-        try {
-            ChessPieceType.valueOf(piece.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        ownedPieces.add(piece.toUpperCase());
-        putUser(snowflake, "ownedPieces", ownedPieces);
-    }
-
-    public static void changePieces(String snowflake, String piece) {
-        try {
-            ChessPieceType.valueOf(piece.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            return;
-        }
-        putUser(snowflake, "selectedBoard", piece.toUpperCase());
+    public static void addOwnedItem(String snowflake, String code) {
+        HashSet<String> items = getUser(snowflake, "ownedItems");
+        items.add(code);
+        putUser(snowflake, "ownedItems", items);
     }
 
     private static Document createGuild(String snowflake) {
@@ -167,30 +151,43 @@ public final class Mongo {
         return (Item) doc.get(field);
     }
 
+    public static <Item> Item getGuildOrDefault(String snowflake, String field, Item default_) {
+        Item i = getGuild(snowflake, field);
+        if (i == null) {
+            putGuild(snowflake, field, default_);
+            return default_;
+        } else
+            return i;
+    }
+
     public static <Item> void putGuild(String snowflake, String field, Item item) {
         Document doc = getGuildDocument(snowflake);
         doc.put(field, item);
         guilds.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static long getPromotionsChannel(String snowflake) {
-        return getGuild(snowflake, "promotions_channel");
+    public static Map<String, Long> getAnnouncements(String snowflake) {
+        return getGuildOrDefault(snowflake, "announcements", new HashMap<>());
     }
 
-    public static void setPromotionsChannel(String snowflake, long id) {
-        putGuild(snowflake, "promotions_channel", id);
+    public static void addAnnouncements(String snowflake, String type, long channel) {
+        var a = getAnnouncements(snowflake);
+        a.put(type, channel);
+        putGuild(snowflake, "announcements", a);
     }
 
-    @Nullable
-    public static List<MessageScheduler.EpicStorePromotion> getLastPromotions(String snowflake) {
-        List<Document> a = getGuild(snowflake, "last_promotions");
-        if (a == null)
-            return null;
-        return a.stream().map(MessageScheduler.EpicStorePromotion::of).toList();
+    public static List<Announcement> getLastAnnouncements(String snowflake) {
+        ArrayList<Document> a = getGuildOrDefault(snowflake, "last_announcements", new ArrayList<>());
+        return a.stream().map(Announcement::of).toList();
     }
 
-    public static void setLastPromotions(String snowflake, List<MessageScheduler.EpicStorePromotion> promos) {
-        putGuild(snowflake, "last_promotions", promos);
+    public static void setLastAnnouncements(String snowflake, List<Announcement> announcements) {
+        var a = announcements.stream().map(announcement -> {
+            Document d = new Document("class", announcement.getClass().getName());
+            d.put("announcement", announcement);
+            return d;
+        }).toList();
+        putGuild(snowflake, "last_announcements", a);
     }
 
     private Mongo() {

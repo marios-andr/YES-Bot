@@ -1,18 +1,20 @@
 package com.congueror.yesbot.command.commands.economy;
 
-import com.congueror.yesbot.command.Command;
+import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.shop.Shop;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.utils.FileUpload;
-import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+public class ShopCommand extends AbstractCommand {
 
-public class ShopCommand implements Command {
     @Override
-    public void handle(MessageReceivedEvent event) {
-        String[] shop = getInput(event);
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        String[] shop = getInput(event.getMessage());
         if (check(shop)) {
             Message reference = event.getMessage();
 
@@ -24,19 +26,24 @@ public class ShopCommand implements Command {
     }
 
     @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+
+    }
+
+    @Override
     public String getName() {
         return "shop";
     }
 
     @Override
-    public String[] getArgs() {
-        return new String[] {"item"};
+    public OptionData[] getArgs() {
+        return new OptionData[] {
+                new OptionData(OptionType.STRING, "item", "The item to be bought", false)
+        };
     }
 
     @Override
-    public String getDescription() {
-        ArrayList<String> desc = new ArrayList<>();
-        desc.add("A place where you can purchase items with points you have accumulated");
-        return StringUtils.join(desc, String.format("%n", ""));
+    public String getCommandDescription() {
+        return "A place where you can purchase items with points you have accumulated";
     }
 }

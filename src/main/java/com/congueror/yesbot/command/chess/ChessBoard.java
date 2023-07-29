@@ -3,6 +3,7 @@ package com.congueror.yesbot.command.chess;
 import com.congueror.yesbot.mongodb.Mongo;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
+import net.dv8tion.jda.internal.utils.tuple.Pair;
 
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
@@ -21,7 +22,10 @@ import java.util.function.Consumer;
 import static com.congueror.yesbot.command.chess.ChessPiece.*;
 
 public class ChessBoard {
+    /** [ Temporary ID, User IDs [ Challenger, Challenged ] ]*/
+    private static final Map<String, Pair<String, String>> REQUESTS = new HashMap<>();
     private static final Map<UUID, ChessBoard> CHESS_GAMES = new HashMap<>();
+    private static final Map<String, ChessBoard> PENDING_PROMOTIONS = new HashMap<>();
 
     public static boolean isInGame(String userId) {
         return CHESS_GAMES.values().stream().anyMatch(chessBoard -> chessBoard.userIds[0].equals(userId) || chessBoard.userIds[1].equals(userId));
@@ -37,6 +41,44 @@ public class ChessBoard {
         return CHESS_GAMES.get(uuid);
     }
 
+    public static void createRequest(String requestId, String challenger, String challenged) {
+        REQUESTS.put(requestId, new ImmutablePair<>(challenger, challenged));
+    }
+
+    public static ChessBoard acceptRequest(String requestId, String challenged, BiConsumer<String, String> onAccept) {
+        var msg = REQUESTS.get(requestId);
+        if (msg != null && msg.getRight().equals(challenged)) {
+            onAccept.accept(msg.getLeft(), msg.getRight());
+            REQUESTS.remove(requestId);
+            return newChessBoard(new String[]{msg.getLeft(), msg.getRight()});
+        }
+        return null;
+    }
+
+    public static void declineRequest(String requestId, String challenged, BiConsumer<String, String> onDecline) {
+        var msg = REQUESTS.get(requestId);
+        if (msg != null && msg.getRight().equals(challenged)) {
+            onDecline.accept(msg.getLeft(), msg.getRight());
+            REQUESTS.remove(requestId);
+        }
+    }
+
+    public static void createPendingPromotion(String requestId, ChessBoard game) {
+        if (game.requiresPromotion == null)
+            return;
+        PENDING_PROMOTIONS.put(requestId, game);
+    }
+
+    public static void promotePending(String requestId, ChessPiece.Type promotion, Consumer<ChessBoard> success) {
+        var game = PENDING_PROMOTIONS.get(requestId);
+        if (game != null) {
+            game.promote(promotion);
+            game.finishTurn();
+            success.accept(game);
+            PENDING_PROMOTIONS.remove(requestId);
+        }
+    }
+
     private final UUID uuid;
     private final ChessPosition[][] board;
     //White Player, Black Player
@@ -45,6 +87,7 @@ public class ChessBoard {
     private final int[] lastMove = new int[]{-1, -1, -1, -1};
     private boolean isSimulation;
 
+    /** 0 or 1*/
     public int turn = 0;
 
     public int[] requiresPromotion;
@@ -117,6 +160,14 @@ public class ChessBoard {
 
     private void setSimulation() {
         this.isSimulation = true;
+    }
+
+    public String getTurn() {
+        return userIds[turn];
+    }
+
+    public String getNext() {
+        return userIds[turn == 0 ? 1 : 0];
     }
 
     public String getOpponent(String userId) {
@@ -219,11 +270,11 @@ public class ChessBoard {
     /**
      * Attempt to move a piece.
      *
-     * @return 0: if piece successfully moved.
-     * 1: if piece cannot move due to invalid 'from' position.
-     * 2: if piece cannot move due to invalid 'to' position.
-     * 3: if player is invalid.
-     * 4: if it requires pawn promotion.
+     * @return 0: if piece successfully moved.<br>
+     * 1: if piece cannot move due to invalid 'from' position.<br>
+     * 2: if piece cannot move due to invalid 'to' position.<br>
+     * 3: if player is invalid.<br>
+     * 4: if it requires pawn promotion.<br>
      */
     public int move(String userId, int[] fromPos, int[] to) {
         if (requiresPromotion == null) {
@@ -423,11 +474,11 @@ public class ChessBoard {
         }
     }
 
-    public void promote(ChessPiece piece) {
+    public void promote(ChessPiece.Type piece) {
         if (requiresPromotion != null) {
             ChessPosition pos = board[requiresPromotion[0]][requiresPromotion[1]];
             if (piece != null)
-                pos.setPiece(piece);
+                pos.setPiece(piece.getPiece(this.turn));
             requiresPromotion = null;
         }
     }
@@ -460,8 +511,8 @@ public class ChessBoard {
 
     @SuppressWarnings("ConstantConditions")
     public File drawBoard(@Nullable int[] drawnMove) {
-        ChessBoardType boardType = Mongo.getSelectedBoard(userIds[0]);
-        ChessPieceType pieceType = Mongo.getSelectedPiece(userIds[0]);
+        ChessBoardDecor boardType = Mongo.getSelectedBoard(userIds[0]);
+        ChessPieceDecor pieceType = Mongo.getSelectedPiece(userIds[0]);
 
         try {
 
@@ -484,6 +535,7 @@ public class ChessBoard {
 
 
             a.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 80));
+
             a.setColor(new Color(165, 42, 42));
             for (int i = 1; i <= 8; i++) {
                 a.drawString(i + "", 146 / 2, (10 - i) * 146 - 146 / 4);
@@ -511,6 +563,7 @@ public class ChessBoard {
 
             if (drawnMove != null) {
                 ChessPosition pos = board[drawnMove[0]][drawnMove[1]];
+                a.setColor(Color.ORANGE);
                 ChessPosition.getPossibleMoves().apply(this, pos).forEach(p -> {
                     if (p.right == null) {
                         a.fillOval(146 * p.left[1] + 146 + 146 / 2 - 146 / 8, 146 * p.left[0] + 146 + 146 / 2 - 146 / 8, 146 / 4, 146 / 4);

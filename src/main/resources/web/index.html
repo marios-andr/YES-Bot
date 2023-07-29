@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Y.E.S. Bot</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<script src="login.js"></script>
+
+<body>
+
+<button type="button" onclick="onMoveButtonPress('left')">
+    <img class="move_button_img" src="images/move_left.png" alt="move_left">
+</button>
+
+<div id="guilds"></div>
+
+<button type="button" onclick="onMoveButtonPress('right')">
+    <img class="move_button_img" src="images/move_right.png" alt="move_right">
+</button>
+
+<button onclick="onLockPress()">
+    <img class="override_button_img" src="images/lock.png" alt="">
+</button>
+<button onclick="onUnlockPress()">
+    <img class="override_button_img" src="images/unlock.png" alt="">
+</button>
+<button onclick="onStopPress()">
+    <img class="override_button_img" src="images/shutdown.png" alt="">
+</button>
+<button onclick="onReloadPress()">
+    <img class="override_button_img" src="images/refresh.png" alt="">
+</button>
+
+<div id="channels">
+    <select id="text_channel_select" hidden onchange="onTextChannelSelect()"></select>
+    <select id="voice_channel_select" hidden onchange="onVoiceChannelSelect()"></select>
+
+    <br>
+    <textarea id="message_area" hidden rows="4" cols="50"></textarea>
+    <button id="send_button" hidden onclick="onSendButtonPress()">
+        <img class="guild_button_img" src="images/send.png" alt="send">
+    </button>
+
+    <br>
+
+    <select id="users_select" hidden onchange="onUserSelect()"></select>
+    <br>
+
+    <button id="voice_join_button" hidden onclick="onVoiceJoinPress()">
+        <img class="voice_button_img" src="images/join.png" alt="">
+    </button>
+    <button id="voice_leave_button" hidden onclick="onVoiceLeavePress()">
+        <img class="voice_button_img" src="images/leave.png" alt="">
+    </button>
+    <button id="voice_muteall_button" hidden onclick="onVoiceMuteAllPress()">
+        <img class="voice_button_img" src="images/mute_all.png" alt="">
+    </button>
+    <button id="voice_unmuteall_button" hidden onclick="onVoiceUnmuteAllPress()">
+        <img class="voice_button_img" src="images/unmute_all.png" alt="">
+    </button>
+
+</div>
+
+<textarea id="console" readonly rows="30" cols="80" wrap="off"></textarea>
+<select id="log_files" onchange="onLogFileSelect()"></select>
+
+<script src="bot.js"></script>
+</body>
+
+
+</html>

@@ -5,9 +5,10 @@ import com.congueror.yesbot.command.shop.Shop;
 import java.awt.*;
 import java.io.File;
 
-public enum ChessBoardType implements Shop.ShopEntry {
+public enum ChessBoardDecor implements Shop.ShopEntry {
 
     DEFAULT(0, new Color(125, 148, 93), new Color(238, 238, 213)),
+    RED(0, new Color(0xBA5546), new Color(0xF0D8BF)),
     CUSTOM(1300, ""),
     ;
 
@@ -17,18 +18,23 @@ public enum ChessBoardType implements Shop.ShopEntry {
     final Color firstColor;
     final Color secondColor;
 
-    ChessBoardType(int price, String tileLocation) {
+    ChessBoardDecor(int price, String tileLocation) {
         this.price = price;
         this.tileLocation = tileLocation;
         this.firstColor = null;
         this.secondColor = null;
     }
 
-    ChessBoardType(int price, Color firstColor, Color secondColor) {
+    ChessBoardDecor(int price, Color firstColor, Color secondColor) {
         this.price = price;
         this.tileLocation = null;
         this.firstColor = firstColor;
         this.secondColor = secondColor;
+    }
+
+    @Override
+    public String idGroup() {
+        return "CB#";
     }
 
     @Override

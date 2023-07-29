@@ -1,0 +1,58 @@
+body {
+    background-color: #36393F;
+}
+
+button {
+    background-color: #36393F;
+    border: none;
+}
+
+.move_button_img {
+    width: 40px;
+    height: 40px;
+    border: solid rgb(183, 7, 7);
+    background: rgb(183, 7, 7);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.move_button_img:hover {
+    border: solid red;
+    background: red;
+}
+
+.override_button_img {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    border: solid lawngreen;
+    background: lawngreen;
+    border-radius: 50%;
+}
+
+#guilds {
+    display: inline;
+}
+
+.guild_button_img {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+}
+
+.voice_button_img {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    border: solid dodgerblue;
+    background: dodgerblue;
+    border-radius: 50%;
+}
+
+#console {
+    font-family: Consolas, monospace;
+    color: #CCCCCC;
+    background: #0C0C0C;
+    display: block;
+    width: 100%;
+}
