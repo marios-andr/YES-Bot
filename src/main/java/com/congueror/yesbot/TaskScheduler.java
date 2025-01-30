@@ -1,32 +1,18 @@
 package com.congueror.yesbot;
 
 import com.congueror.yesbot.command.announcements.Announcement;
-import com.congueror.yesbot.mongodb.Mongo;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.dv8tion.jda.api.EmbedBuilder;
+import com.congueror.yesbot.database.DatabaseHandler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import org.bson.Document;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import static com.congueror.yesbot.Constants.*;
 
 public class TaskScheduler {
 
@@ -53,7 +39,7 @@ public class TaskScheduler {
             try {
                 var guilds = jda.getGuilds();
                 for (Guild guild : guilds) {
-                    if (Mongo.hasGuildDocument(guild.getId())) {
+                    if (DatabaseHandler.hasPromotions(guild.getId())) {
                         Announcement.update(guild, jda);
                     }
                 }

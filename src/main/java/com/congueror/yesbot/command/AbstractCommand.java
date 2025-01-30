@@ -1,11 +1,14 @@
 package com.congueror.yesbot.command;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.Reddit;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.entities.channel.unions.GuildMessageChannelUnion;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -111,10 +114,13 @@ public abstract class AbstractCommand extends ListenerAdapter {
     }
 
     public void sendRandomPost(MessageReceivedEvent event, Message reference, String... subreddits) {
+        /*
         int rand = new Random().nextInt(0, subreddits.length);
         var post = Reddit.getRandomSubmission(subreddits[rand]);
+        if (post == null)
+            Constants.LOG.error("Reddit API was unable to find random post.");
 
-        if (post.isNsfw() && !event.getChannel().asTextChannel().isNSFW()) {
+        if (post.isOver18() && !event.getChannel().asTextChannel().isNSFW()) {
             event.getChannel().sendMessage("Post was nsfw, but channel is not.").setMessageReference(reference).queue();
         } else {
             String sendAfter = "";
@@ -146,19 +152,25 @@ public abstract class AbstractCommand extends ListenerAdapter {
             } else {
                 embed.setImage(post.getUrl());
             }
-            embed.setFooter(post.getCreated().toString());
+            //embed.setFooter(post.getCreated());
             embed.setColor(Color.RED);
             event.getChannel().sendMessageEmbeds(embed.build()).setMessageReference(reference).queue();
             if (!sendAfter.isEmpty() && !sendAfter.isBlank())
                 event.getChannel().sendMessage(sendAfter).queue();
-        }
+        }*/
     }
 
     public void sendRandomPost(SlashCommandInteractionEvent event, String... subreddits) {
+        /*
         int rand = new Random().nextInt(0, subreddits.length);
         var post = Reddit.getRandomSubmission(subreddits[rand]);
+        if (post == null) {
+            Constants.LOG.error("Reddit API was unable to find random post.");
+            return;
+        }
 
-        if (post.isNsfw() && !event.getChannel().asTextChannel().isNSFW()) {
+
+        if (post.isOver18() && !event.getChannel().asTextChannel().isNSFW()) {
             event.getHook().sendMessage("Post was nsfw, but channel is not.").queue();
         } else {
             String sendAfter = "";
@@ -190,41 +202,37 @@ public abstract class AbstractCommand extends ListenerAdapter {
             } else {
                 embed.setImage(post.getUrl());
             }
-            embed.setFooter(post.getCreated().toString());
+            //embed.setFooter(post.getCreated().toString());
             embed.setColor(Color.RED);
             event.getHook().sendMessageEmbeds(embed.build()).queue();
             if (!sendAfter.isEmpty() && !sendAfter.isBlank())
                 event.getHook().sendMessage(sendAfter).queue();
-        }
+        }*/
     }
 
     public AudioChannel joinVC(MessageReceivedEvent event) {
-        if (event.getGuild().getSelfMember().hasPermission(event.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            AudioChannel connectedChannel = Objects.requireNonNull(Objects.requireNonNull(event.getMember()).getVoiceState()).getChannel();
+        return joinVC(event.getGuild(), event.getGuildChannel(), event.getMember(), event.getChannel());
+    }
+
+    public AudioChannel joinVC(SlashCommandInteractionEvent event) {
+        return joinVC(event.getGuild(), event.getGuildChannel(), event.getMember(), event.getChannel());
+    }
+
+    @Nullable
+    private AudioChannel joinVC(Guild guild, GuildMessageChannelUnion guildChannel, Member member, MessageChannelUnion channel) {
+        if (guild.getSelfMember().hasPermission(guildChannel, Permission.VOICE_CONNECT)) {
+            AudioChannel connectedChannel = Objects.requireNonNull(Objects.requireNonNull(member).getVoiceState()).getChannel();
             if (connectedChannel == null) {
-                event.getChannel().sendMessage("not in channel").queue();
+                channel.sendMessage("not in channel").queue();
                 return null;
             }
-            AudioManager audioManager = event.getGuild().getAudioManager();
+            AudioManager audioManager = guild.getAudioManager();
             audioManager.openAudioConnection(connectedChannel);
             return connectedChannel;
         }
         return null;
     }
 
-    public AudioChannel joinVC(SlashCommandInteractionEvent event) {
-        if (event.getGuild().getSelfMember().hasPermission(event.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            AudioChannel connectedChannel = Objects.requireNonNull(Objects.requireNonNull(event.getMember()).getVoiceState()).getChannel();
-            if (connectedChannel == null) {
-                event.getChannel().sendMessage("not in channel").queue();
-                return null;
-            }
-            AudioManager audioManager = event.getGuild().getAudioManager();
-            audioManager.openAudioConnection(connectedChannel);
-            return connectedChannel;
-        }
-        return null;
-    }
 
     public enum Scope {
         GUILD, GLOBAL

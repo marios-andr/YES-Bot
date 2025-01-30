@@ -1,4 +1,4 @@
-package com.congueror.yesbot.mongodb;
+package com.congueror.yesbot.database;
 
 import com.congueror.yesbot.Constants;
 import com.congueror.yesbot.command.announcements.Announcement;
@@ -13,6 +13,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.bson.Document;
 
 import java.util.*;
@@ -48,7 +49,7 @@ public final class Mongo {
                 .append("ownedItems", new HashSet<>(List.of("CP#0", "CB#0")));
     }
 
-    public static Document getUserDocument(String snowflake) {
+    static Document getUserDocument(String snowflake) {
         Document doc = users.find(Filters.eq("id", snowflake)).first();
         if (doc == null) {
             doc = createUser(snowflake);
@@ -57,22 +58,22 @@ public final class Mongo {
         return doc;
     }
 
-    public static <Item> Item getUser(String snowflake, String field) {
+    private static <Item> Item getUser(String snowflake, String field) {
         Document doc = getUserDocument(snowflake);
         return (Item) doc.get(field);
     }
 
-    public static <Item> void putUser(String snowflake, String field, Item item) {
+    private static <Item> void putUser(String snowflake, String field, Item item) {
         Document doc = getUserDocument(snowflake);
         doc.put(field, item);
         users.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static ChessBoardDecor getSelectedBoard(String snowflake) {
+    static ChessBoardDecor getSelectedBoard(String snowflake) {
         return ChessBoardDecor.valueOf(getUser(snowflake, "selectedBoard").toString().toUpperCase());
     }
 
-    public static void setSelectedBoard(String snowflake, String board) {
+    static void setSelectedBoard(String snowflake, String board) {
         try {
             ChessBoardDecor.valueOf(board.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -82,11 +83,11 @@ public final class Mongo {
         putUser(snowflake, "selectedBoard", board.toUpperCase());
     }
 
-    public static ChessPieceDecor getSelectedPiece(String snowflake) {
+    static ChessPieceDecor getSelectedPiece(String snowflake) {
         return ChessPieceDecor.valueOf(getUser(snowflake, "selectedPiece").toString().toUpperCase());
     }
 
-    public static void setSelectedPiece(String snowflake, String piece) {
+    static void setSelectedPiece(String snowflake, String piece) {
         try {
             ChessPieceDecor.valueOf(piece.toUpperCase());
         } catch (IllegalArgumentException e) {
@@ -96,32 +97,32 @@ public final class Mongo {
         putUser(snowflake, "selectedBoard", piece.toUpperCase());
     }
 
-    public static void addChessWin(String snowflake) {
+    static void addChessWin(String snowflake) {
         int wins = getUser(snowflake, "chessWins");
         putUser(snowflake, "chessWins", ++wins);
         int points = getUser(snowflake, "points");
         putUser(snowflake, "points", points + 100);
     }
 
-    public static void addChessLoss(String snowflake) {
+    static void addChessLoss(String snowflake) {
         int losses = getUser(snowflake, "chessLosses");
         putUser(snowflake, "chessLosses", ++losses);
         int points = getUser(snowflake, "points");
         putUser(snowflake, "points", points);
     }
 
-    public static void addChessTie(String snowflake) {
+    static void addChessTie(String snowflake) {
         int ties = getUser(snowflake, "chessTies");
         putUser(snowflake, "chessTies", ++ties);
         int points = getUser(snowflake, "points");
         putUser(snowflake, "points", points + 10);
     }
 
-    public static HashSet<String> getOwnedItems(String snowflake) {
+    static HashSet<String> getOwnedItems(String snowflake) {
         return getUser(snowflake, "ownedItems");
     }
 
-    public static void addOwnedItem(String snowflake, String code) {
+    static void addOwnedItem(String snowflake, String code) {
         HashSet<String> items = getUser(snowflake, "ownedItems");
         items.add(code);
         putUser(snowflake, "ownedItems", items);
@@ -129,15 +130,15 @@ public final class Mongo {
 
     private static Document createGuild(String snowflake) {
         return new Document("id", snowflake)
-                .append("promotions_channel", 0)
-                .append("last_promotions", null);
+                .append("promotionsChannel", 0)
+                .append("lastPromotions", null);
     }
 
-    public static boolean hasGuildDocument(String snowflake) {
+    static boolean hasGuildDocument(String snowflake) {
         return guilds.find(Filters.eq("id", snowflake)).first() != null;
     }
 
-    public static Document getGuildDocument(String snowflake) {
+    static Document getGuildDocument(String snowflake) {
         Document doc = guilds.find(Filters.eq("id", snowflake)).first();
         if (doc == null) {
             doc = createGuild(snowflake);
@@ -146,12 +147,12 @@ public final class Mongo {
         return doc;
     }
 
-    public static <Item> Item getGuild(String snowflake, String field) {
+    static <Item> Item getGuild(String snowflake, String field) {
         Document doc = getGuildDocument(snowflake);
         return (Item) doc.get(field);
     }
 
-    public static <Item> Item getGuildOrDefault(String snowflake, String field, Item default_) {
+    static <Item> Item getGuildOrDefault(String snowflake, String field, Item default_) {
         Item i = getGuild(snowflake, field);
         if (i == null) {
             putGuild(snowflake, field, default_);
@@ -160,28 +161,50 @@ public final class Mongo {
             return i;
     }
 
-    public static <Item> void putGuild(String snowflake, String field, Item item) {
+    static <Item> void putGuild(String snowflake, String field, Item item) {
         Document doc = getGuildDocument(snowflake);
         doc.put(field, item);
         guilds.replaceOne(Filters.eq("id", snowflake), doc);
     }
 
-    public static Map<String, Long> getAnnouncements(String snowflake) {
+    static long getPromotionsChannel(String snowflake) {
+        return getGuildOrDefault(snowflake, "promotionsChannel", 0);
+    }
+
+    static Map<String, String> getAnnouncements(String snowflake) {
         return getGuildOrDefault(snowflake, "announcements", new HashMap<>());
     }
 
-    public static void addAnnouncements(String snowflake, String type, long channel) {
+    static void addAnnouncements(String snowflake, String type, String channel) {
         var a = getAnnouncements(snowflake);
         a.put(type, channel);
         putGuild(snowflake, "announcements", a);
     }
 
-    public static List<Announcement> getLastAnnouncements(String snowflake) {
+    static List<Announcement> getLastAnnouncements(String snowflake) {
         ArrayList<Document> a = getGuildOrDefault(snowflake, "last_announcements", new ArrayList<>());
-        return a.stream().map(Announcement::of).toList();
+        return a.stream().map(Mongo::createAnnouncement).toList();
     }
 
-    public static void setLastAnnouncements(String snowflake, List<Announcement> announcements) {
+    static Announcement createAnnouncement(Document doc) {
+        try {
+            Class<?> clazz = Class.forName(doc.getString("class"));
+            Document ann = doc.get("announcement", Document.class);
+
+            if (!Arrays.stream(clazz.getInterfaces()).anyMatch(aClass -> aClass.equals(Announcement.class)))
+                return null;
+
+            List<Object> fields = new ArrayList<>();
+            Arrays.stream(clazz.getDeclaredFields()).forEach(field -> {
+                fields.add(ann.get(field.getName(), field.getType()));
+            });
+            return (Announcement) clazz.getDeclaredConstructors()[0].newInstance(fields.toArray());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static void setLastAnnouncements(String snowflake, List<Announcement> announcements) {
         var a = announcements.stream().map(announcement -> {
             Document d = new Document("class", announcement.getClass().getName());
             d.put("announcement", announcement);

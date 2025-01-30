@@ -63,10 +63,14 @@ public class ChessCommand extends AbstractCommand {
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        if (event.getReaction().getEmoji().getName().equals("\u2705")) {
+        if (event.getReaction().getEmoji().getName().equals("\u2705")) { // TODO: Add condition for bot when it is reacting.
             ChessBoard board = ChessBoard.acceptRequest(event.getMessageId(), event.getUser().getId(), (s, s2) -> {
                 event.getChannel().sendMessage(mention(s) + ", " + mention(s2) + " accepted your challenge! Good luck.").setMessageReference(event.getMessageId()).queue();
             });
+
+            if (board == null) {
+                return;
+            }
             event.getChannel().sendFiles(FileUpload.fromData(board.drawBoard(null))).setMessageReference(event.getMessageId()).queue();
         } else if (event.getReaction().getEmoji().getName().equals("\u274E")) {
             ChessBoard.declineRequest(event.getMessageId(), event.getUser().getId(), (s, s2) -> {

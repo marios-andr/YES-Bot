@@ -4,7 +4,8 @@ import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.chess.ChessBoardDecor;
 import com.congueror.yesbot.command.chess.ChessPieceDecor;
-import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.database.DatabaseHandler;
+import com.congueror.yesbot.database.Mongo;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -29,8 +30,8 @@ public class YESBot {
 
             setupSystemTray();
 
-            Mongo.initialize();
-            Reddit.initialize();
+            DatabaseHandler.initialize();
+            //Reddit.initialize();
 
             JDA jda = createJDA();
             setupCommands(jda, args);

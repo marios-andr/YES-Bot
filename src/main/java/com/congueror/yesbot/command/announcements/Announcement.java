@@ -1,7 +1,8 @@
 package com.congueror.yesbot.command.announcements;
 
 import com.congueror.yesbot.Constants;
-import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.database.DatabaseHandler;
+import com.congueror.yesbot.database.Mongo;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -21,24 +22,6 @@ public interface Announcement {
     }};
 
     MessageEmbed buildEmbed();
-
-    static Announcement of(Document doc) {
-        try {
-            Class<?> clazz = Class.forName(doc.getString("class"));
-            Document ann = doc.get("announcement", Document.class);
-
-            if (!Arrays.stream(clazz.getInterfaces()).anyMatch(aClass -> aClass.equals(Announcement.class)))
-                return null;
-
-            List<Object> fields = new ArrayList<>();
-            Arrays.stream(clazz.getDeclaredFields()).forEach(field -> {
-                fields.add(ann.get(field.getName(), field.getType()));
-            });
-            return (Announcement) clazz.getDeclaredConstructors()[0].newInstance(fields.toArray());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     static String find(String t) {
         for (String s : Announcement.DESCRIPTIONS.keySet()) {
@@ -68,13 +51,13 @@ public interface Announcement {
 
     static void update(Guild guild, JDA jda) {
         String sf = guild.getId();
-        var announcements = Mongo.getAnnouncements(sf);
-        for (String s : announcements.keySet()) {
-            if (announcements.get(s) == 0)
+        Map<String, String> channels = DatabaseHandler.getPromotionsChannels(sf);
+        for (String s : channels.keySet()) {
+            if (channels.get(s).equals("0"))
                 continue;
-            TextChannel channel = jda.getTextChannelById(announcements.get(s));
+            TextChannel channel = jda.getTextChannelById(channels.get(s));
 
-            List<Announcement> lastAnn = Mongo.getLastAnnouncements(sf);
+            List<Announcement> lastAnn = DatabaseHandler.getLastPromotions(sf);
             List<Announcement> ann = parse(s);
 
             List<Announcement> newAnn = new ArrayList<>(ann);
@@ -84,7 +67,7 @@ public interface Announcement {
                 channel.sendMessageEmbeds(a.buildEmbed()).queue();
             }
 
-            Mongo.setLastAnnouncements(sf, ann);
+            DatabaseHandler.setLastPromotions(sf, ann);
         }
     }
 }

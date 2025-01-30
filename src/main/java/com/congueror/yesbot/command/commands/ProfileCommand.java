@@ -1,8 +1,10 @@
 package com.congueror.yesbot.command.commands;
 
 import com.congueror.yesbot.command.Command;
-import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.database.DatabaseHandler;
+import com.congueror.yesbot.database.Mongo;
 import com.congueror.yesbot.command.AbstractCommand;
+import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -34,11 +36,11 @@ public class ProfileCommand extends AbstractCommand {
             embed.setTitle("**__" + player.getAsTag() + "__**");
             embed.setThumbnail(player.getEffectiveAvatarUrl());
             embed.setColor(Color.RED);
-            Document doc = Mongo.getUserDocument(player.getId());
+            JsonObject doc = DatabaseHandler.getUserJson(player.getId());
             for (var a : doc.keySet()) {
                 if (a.equals("_id") || a.equals("id"))
                     continue;
-                embed.addField(a + ":", doc.get(a).toString(), true);
+                embed.addField(a + ":", doc.get(a).getAsString(), true);
             }
             event.getChannel().sendMessageEmbeds(embed.build()).setMessageReference(reference).queue();
         }
@@ -59,11 +61,11 @@ public class ProfileCommand extends AbstractCommand {
         embed.setTitle("**__" + player.getAsTag() + "__**");
         embed.setThumbnail(player.getEffectiveAvatarUrl());
         embed.setColor(Color.RED);
-        Document doc = Mongo.getUserDocument(player.getId());
+        JsonObject doc = DatabaseHandler.getUserJson(player.getId());
         for (var a : doc.keySet()) {
             if (a.equals("_id") || a.equals("id"))
                 continue;
-            embed.addField(a + ":", doc.get(a).toString(), true);
+            embed.addField(a + ":", doc.get(a).getAsString(), true);
         }
         event.getHook().sendMessageEmbeds(embed.build()).queue();
     }

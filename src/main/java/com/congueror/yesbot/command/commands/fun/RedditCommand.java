@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 
-@Command
+//@Command
 public class RedditCommand extends AbstractCommand {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {

@@ -2,7 +2,8 @@ package com.congueror.yesbot;
 
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.shop.Shop;
-import com.congueror.yesbot.util.CustomPrintStream;
+import com.congueror.yesbot.database.DatabaseHandler;
+import com.congueror.yesbot.util.ConsolePrintStream;
 import com.congueror.yesbot.util.HtmlDocument;
 import com.congueror.yesbot.util.LogFile;
 import com.google.gson.*;
@@ -40,8 +41,8 @@ public final class Constants {
     }
 
     public static void init() {
-        System.setErr(new CustomPrintStream(System.err, Constants::onLogMessage));
-        System.setOut(new CustomPrintStream(System.out, Constants::onLogMessage));
+        System.setErr(new ConsolePrintStream(System.err));
+        System.setOut(new ConsolePrintStream(System.out));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> LOG.info("System was shutdown.")));
 
@@ -67,7 +68,8 @@ public final class Constants {
                 jsonWriter.setIndent("   ");
                 GSON.toJson(obj, jsonWriter);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("Something went wrong while creating settings.json, Program will exit.", e);
+                System.exit(-1);
             }
 
             LOG.error("Settings json was missing and was therefore created, fill out the necessary information and launch the application again.");
@@ -84,7 +86,7 @@ public final class Constants {
             if (!name.isEmpty())
                 throw new JsonParseException("There was an error parsing settings.json, field \"" + name + "\" was either null or not specified.");
         } catch (Exception e) {
-            e.printStackTrace();
+            Constants.LOG.error(e.getMessage());
             System.exit(-1);
         }
     }
@@ -140,18 +142,6 @@ public final class Constants {
         return num;
     }
 
-    public static void onLogMessage(String out) {
-        String write = "";
-        try {
-            if (out.equals("\r\n") || (out.length() >= 4 && out.substring(0, 4).contains("\tat")))
-                write = LOG_FILE.writePlain(out);
-            else
-                write = LOG_FILE.write(out);
-        } catch (IOException ignored) {
-        }
-        WebInterface.sendToConsole(write);
-    }
-
     static boolean checkCredentials(String username, String password) {
         for (var c : SETTINGS.credentials()) {
             if (c.name.equals(username) && c.password.equals(password))
@@ -162,7 +152,7 @@ public final class Constants {
 
     public record Settings(String token, String bot_snowflake, String owner_snowflake, String mongo_link,
                            String reddit_username, String reddit_password, String reddit_client, String reddit_secret,
-                           String steam_token, User[] credentials) {}
+                           String steam_token, Admin[] credentials) {}
 
-    public record User(String name, String password) {}
+    public record Admin(String name, String password) {}
 }

@@ -3,7 +3,8 @@ package com.congueror.yesbot.command.commands;
 import com.congueror.yesbot.command.AbstractCommand;
 import com.congueror.yesbot.command.Command;
 import com.congueror.yesbot.command.announcements.Announcement;
-import com.congueror.yesbot.mongodb.Mongo;
+import com.congueror.yesbot.database.DatabaseHandler;
+import com.congueror.yesbot.database.Mongo;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -33,7 +34,7 @@ public class AddAnnouncementCommand extends AbstractCommand {
             }
 
             Channel channel = op1.getAsChannel();
-            Mongo.addAnnouncements(event.getGuild().getId(), op.getAsString(), channel.getIdLong());
+            DatabaseHandler.addPromotionsChannel(event.getGuild().getId(), op.getAsString(), channel.getId());
             event.getHook().sendMessage(op.getAsString() + " announcement added to " + channel.getAsMention()).queue();
         }
     }
