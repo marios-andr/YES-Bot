@@ -4,7 +4,7 @@ plugins {
     id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
-group 'com.congueror'
+group 'io.github.marios_andr'
 version '0.1'
 
 java {
@@ -43,14 +43,14 @@ dependencies {
 }
 
 application {
-    mainClass = 'com.congueror.yesbot.YESBot'
+    mainClass = 'io.github.marios_andr.yesbot.YESBot'
 }
 
 jar {
     manifest {
         attributes(
                 "Implementation-Title": "YESBot",
-                'Main-Class': 'com.congueror.yesbot.YESBot'
+                'Main-Class': application.mainClass
         )
     }
 }
