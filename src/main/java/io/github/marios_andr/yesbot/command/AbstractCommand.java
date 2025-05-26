@@ -23,11 +23,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public abstract class AbstractCommand extends ListenerAdapter {
-    protected static final String UTILITY = ":tools: Utility";
-    protected static final String TESTING = ":robot: Testing";
-    protected static final String VOICE = ":loud_sound: Voice";
-    protected static final String FUN = ":frog: Fun";
-    protected static final String CHESS = ":chess_pawn: Chess";
+    public enum Category {
+        UTILITY(":tools: Utility"),
+        VOICE(":loud_sound: Voice"),
+        FUN(":frog: Fun"),
+        CHESS(":chess_pawn: Chess"),
+        TESTING(":robot: Testing");
+
+        public final String txt;
+
+        Category(String s) {
+            txt = s;
+        }
+    }
 
     @Override
     public abstract void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event);
@@ -38,8 +46,8 @@ public abstract class AbstractCommand extends ListenerAdapter {
 
     public abstract String getCommandDescription();
 
-    public String getCategory() {
-        return UTILITY;
+    public Category getCategory() {
+        return Category.UTILITY;
     }
 
     @Nullable
@@ -91,7 +99,7 @@ public abstract class AbstractCommand extends ListenerAdapter {
     }
 
     public boolean hasMentions(Message message) {
-        return message.getMentions().getMembers().size() >= 1 && message.getMentions().getMembers().get(0) != null;
+        return !message.getMentions().getMembers().isEmpty() && message.getMentions().getMembers().get(0) != null;
     }
 
     public static AbstractCommand getCommand(String key) {

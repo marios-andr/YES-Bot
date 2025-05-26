@@ -5,103 +5,77 @@ import io.github.marios_andr.yesbot.command.announcements.Announcement;
 import io.github.marios_andr.yesbot.command.chess.ChessBoardDecor;
 import io.github.marios_andr.yesbot.command.chess.ChessPieceDecor;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 import java.util.*;
 
-public class DatabaseHandler {
+public final class DatabaseHandler {
 
-    private static boolean isMongoInitialized = false;
+    private static Database DATABASE;
 
     public static void initialize() {
-        if (Constants.getSettings().mongo_link().isEmpty())
+        if (Constants.getSettings().mongo_link().isEmpty()) {
             Constants.LOG.info("No mongo link was provided in settings.json so data will be saved locally instead.");
-        else {
+            DATABASE = new LocalDatabase();
+        } else {
             try {
-                Mongo.initialize();
-                isMongoInitialized = true;
-                return;
+                DATABASE = new MongoDatabase();
             } catch (Exception e) {
                 Constants.LOG.error("Something went wrong while initializing the Mongo connection. Data will be saved locally.", e);
+                DATABASE = new LocalDatabase();
             }
         }
-
-        Local.initialize();
-
     }
 
     public static JsonObject getUserJson(String snowflake) {
-        if (isMongoInitialized)
-            return JsonParser.parseString(Mongo.getUserDocument(snowflake).toJson()).getAsJsonObject();
-        return Local.getUserJson(snowflake);
+        return DATABASE.getUserJson(snowflake);
     }
 
     public static ChessBoardDecor getSelectedBoard(String snowflake) {
-        if (isMongoInitialized)
-            return Mongo.getSelectedBoard(snowflake);
-        return Local.getSelectedBoard(snowflake);
+        return DATABASE.getSelectedBoard(snowflake);
+    }
+
+    public static void setSelectedBoard(String snowflake, String board) {
+
     }
 
     public static ChessPieceDecor getSelectedPiece(String snowflake) {
-        if (isMongoInitialized)
-            return Mongo.getSelectedPiece(snowflake);
-        return Local.getSelectedPiece(snowflake);
+        return DATABASE.getSelectedPiece(snowflake);
     }
 
     public static void addChessWin(String snowflake) {
-        if (isMongoInitialized)
-            Mongo.addChessWin(snowflake);
-        else
-            Local.addChessWin(snowflake);
+        DATABASE.addChessWin(snowflake);
     }
 
     public static void addChessLoss(String snowflake) {
-        if (isMongoInitialized)
-            Mongo.addChessLoss(snowflake);
-        else
-            Local.addChessLoss(snowflake);
+        DATABASE.addChessLoss(snowflake);
     }
 
     public static void addChessTie(String snowflake) {
-        if (isMongoInitialized)
-            Mongo.addChessTie(snowflake);
-        else
-            Local.addChessTie(snowflake);
+        DATABASE.addChessTie(snowflake);
     }
 
     public static boolean hasPromotions(String snowflake) {
-        if (isMongoInitialized)
-            return Mongo.getAnnouncements(snowflake) != null;
-        return Local.getGuild(snowflake).promotionsChannels != null;
+        return DATABASE.hasPromotions(snowflake);
     }
 
     public static Map<String, String> getPromotionsChannels(String snowflake) {
-        if (isMongoInitialized)
-            return Mongo.getAnnouncements(snowflake);
-        return Local.getGuild(snowflake).promotionsChannels;
+        return DATABASE.getPromotionsChannels(snowflake);
     }
 
     public static void addPromotionsChannel(String snowflake, String type, String id) {
-        if (isMongoInitialized)
-            Mongo.addAnnouncements(snowflake, type, id);
-        else
-            Local.addPromotionsChannel(snowflake, type, id);
+        DATABASE.addPromotionsChannel(snowflake, type, id);
     }
 
     public static List<Announcement> getLastPromotions(String snowflake) {
-        if (isMongoInitialized)
-            return Mongo.getLastAnnouncements(snowflake);
-        return Local.getGuild(snowflake).lastPromotions;
+        return DATABASE.getLastPromotions(snowflake);
     }
 
     public static void setLastPromotions(String snowflake, List<Announcement> announcements) {
-        if (isMongoInitialized)
-            Mongo.setLastAnnouncements(snowflake, announcements);
-        else
-            Local.setLastPromotions(snowflake, announcements);
+        DATABASE.setLastPromotions(snowflake, announcements);
     }
 
-    private DatabaseHandler() {}
+    private DatabaseHandler() {
+    }
 
     public static class User {
         final String id;

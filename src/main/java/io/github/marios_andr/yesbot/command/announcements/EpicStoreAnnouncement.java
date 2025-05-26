@@ -27,7 +27,7 @@ public record EpicStoreAnnouncement(String url, String title, String seller, Str
                 .setAuthor(seller, url)
                 .setTitle(title)
                 .setDescription(desc + "\n" + url)
-                .setImage(image)
+                .setImage(image.isEmpty() ? "attachment://missing.png" : image)
                 .addField("Until", endDate.toString(), true)
                 .build();
     }
@@ -55,11 +55,11 @@ public record EpicStoreAnnouncement(String url, String title, String seller, Str
 
     public static EpicStoreAnnouncement of(JsonElement jsonElement) {
         JsonObject o = jsonElement.getAsJsonObject();
-        String title = optionalString(o.get("title"));
-        String desc = optionalString(o.get("description"));
-        String type = optionalString(o.get("offerType"));
+        String title = getStringOrNull(o.get("title"));
+        String desc = getStringOrNull(o.get("description"));
+        String type = getStringOrNull(o.get("offerType"));
 
-        String seller = optionalString(o.getAsJsonObject("seller").get("name"));
+        String seller = getStringOrNull(o.getAsJsonObject("seller").get("name"));
         if (title.equals("Mystery Game"))
             return null;
 
@@ -79,7 +79,13 @@ public record EpicStoreAnnouncement(String url, String title, String seller, Str
 
         String image = "";
         for (var el : o.getAsJsonArray("keyImages")) {
-            if (optionalString(el.getAsJsonObject().get("type")).equals("OfferImageWide")) {
+            if (getStringOrNull(el.getAsJsonObject().get("type")).equals("OfferImageWide")) {
+                image = el.getAsJsonObject().get("url").getAsString();
+                break;
+            } else if (getStringOrNull(el.getAsJsonObject().get("type")).equals("DieselStoreFrontWide")) {
+                image = el.getAsJsonObject().get("url").getAsString();
+                break;
+            } else if (getStringOrNull(el.getAsJsonObject().get("type")).equals("DieselGameBoxWide")) {
                 image = el.getAsJsonObject().get("url").getAsString();
                 break;
             }

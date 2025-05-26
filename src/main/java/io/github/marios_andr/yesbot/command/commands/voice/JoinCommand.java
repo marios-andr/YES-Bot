@@ -42,7 +42,7 @@ public class JoinCommand extends AbstractCommand {
     }
 
     @Override
-    public String getCategory() {
-        return VOICE;
+    public Category getCategory() {
+        return Category.VOICE;
     }
 }

@@ -74,7 +74,7 @@ public class ForfeitCommand extends AbstractCommand {
     }
 
     @Override
-    public String getCategory() {
-        return CHESS;
+    public Category getCategory() {
+        return Category.CHESS;
     }
 }

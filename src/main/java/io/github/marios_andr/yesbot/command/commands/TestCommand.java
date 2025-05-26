@@ -38,7 +38,7 @@ public class TestCommand extends AbstractCommand {
     }
 
     @Override
-    public String getCategory() {
-        return TESTING;
+    public Category getCategory() {
+        return Category.TESTING;
     }
 }

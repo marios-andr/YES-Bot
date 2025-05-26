@@ -31,13 +31,13 @@ public class HelpCommand extends AbstractCommand {
                 embed.setTitle("**__Commands__**");
                 embed.setColor(Color.RED);
 
-                ListMap<String, String> fields = new ListMap<>();
+                ListMap<Category, String> fields = new ListMap<>();
                 for (AbstractCommand command : commands) {
                     fields.addEntry(command.getCategory(), command.getCommandAndArgs());
                 }
                 fields.forEach((s, strings) -> {
                     String v = StringUtils.join(strings, "\n");
-                    embed.addField(s, v, true);
+                    embed.addField(s.txt, v, true);
                 });
 
                 event.getChannel().sendMessageEmbeds(embed.build()).setMessageReference(reference).queue();
@@ -78,13 +78,13 @@ public class HelpCommand extends AbstractCommand {
             embed.setTitle("**__Commands__**");
             embed.setColor(Color.RED);
 
-            ListMap<String, String> fields = new ListMap<>();
+            ListMap<Category, String> fields = new ListMap<>();
             for (AbstractCommand command : Constants.COMMANDS) {
                 fields.addEntry(command.getCategory(), command.getCommandAndArgs());
             }
             fields.forEach((s, strings) -> {
                 String v = StringUtils.join(strings, "\n");
-                embed.addField(s, v, true);
+                embed.addField(s.txt, v, true);
             });
 
             event.getHook().sendMessageEmbeds(embed.build()).queue();

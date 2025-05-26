@@ -31,8 +31,8 @@ public class YESBot {
 
             DatabaseHandler.initialize();
             //Reddit.initialize();
-
             JDA jda = createJDA();
+
             setupCommands(jda, args);
 
             var guilds = jda.getGuilds();

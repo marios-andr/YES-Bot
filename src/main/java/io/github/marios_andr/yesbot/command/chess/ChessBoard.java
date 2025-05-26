@@ -1,5 +1,6 @@
 package io.github.marios_andr.yesbot.command.chess;
 
+import io.github.marios_andr.yesbot.Constants;
 import io.github.marios_andr.yesbot.database.DatabaseHandler;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.internal.utils.tuple.ImmutablePair;
@@ -509,7 +510,6 @@ public class ChessBoard {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     public File drawBoard(@Nullable int[] drawnMove) {
         ChessBoardDecor boardType = DatabaseHandler.getSelectedBoard(userIds[0]);
         ChessPieceDecor pieceType = DatabaseHandler.getSelectedPiece(userIds[0]);
@@ -579,7 +579,7 @@ public class ChessBoard {
             ImageIO.write(main, "png", new File(getClass().getClassLoader().getResource("chess/temp.png").toURI()));
             return new File(getClass().getClassLoader().getResource("chess/temp.png").toURI());
         } catch (Exception e) {
-            e.printStackTrace();
+            Constants.LOG.error("Something went wrong while drawing the chess board", e);
             return null;
         }
     }

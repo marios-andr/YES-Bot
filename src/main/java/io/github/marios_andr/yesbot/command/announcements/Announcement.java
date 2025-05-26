@@ -6,7 +6,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.FileUpload;
 
+import java.io.InputStream;
 import java.util.*;
 
 public interface Announcement {
@@ -62,7 +65,13 @@ public interface Announcement {
             newAnn.removeAll(lastAnn);
             for (Announcement a : newAnn) {
                 Constants.LOG.info("New announcement found in guild {}({}) of type {}", guild.getName(), sf, s);
-                channel.sendMessageEmbeds(a.buildEmbed()).queue();
+                MessageEmbed embed = a.buildEmbed();
+                MessageCreateAction act = channel.sendMessageEmbeds(embed);
+                if (embed.getImage().getUrl().equals("attachment://missing.png")) {
+                    InputStream in = Announcement.class.getResourceAsStream("/missing.png");
+                    act.addFiles(FileUpload.fromData(in, "missing.png"));
+                }
+                act.queue();
             }
 
             DatabaseHandler.setLastPromotions(sf, ann);

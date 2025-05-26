@@ -6,5 +6,4 @@
 /src/main/resources/.env
 /logs/
 /settings.json
-/user_database.json
-/guild_database.json
+/database.json

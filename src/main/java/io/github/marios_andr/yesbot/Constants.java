@@ -127,7 +127,7 @@ public final class Constants {
     }
 
     @Nullable
-    public static String optionalString(JsonElement element) {
+    public static String getStringOrNull(JsonElement element) {
         return element == null ? null : element.getAsString();
     }
 

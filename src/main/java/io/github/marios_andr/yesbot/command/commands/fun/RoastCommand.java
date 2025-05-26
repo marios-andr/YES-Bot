@@ -87,7 +87,7 @@ public class RoastCommand extends AbstractCommand {
     }
 
     @Override
-    public String getCategory() {
-        return FUN;
+    public Category getCategory() {
+        return Category.FUN;
     }
 }

@@ -31,19 +31,19 @@ public class ChessComCommand extends AbstractCommand {
 
                 JsonObject json = getJson("https://api.chess.com/pub/player/" + username);
                 if (json != null) {
-                    String avatar = optionalString(json.get("avatar")); // optional
+                    String avatar = getStringOrNull(json.get("avatar")); // optional
                     long id = json.get("player_id").getAsLong();
                     String url = json.get("url").getAsString();
-                    String name = optionalString(json.get("name")); // optional
-                    String title = optionalString(json.get("title")); // optional
+                    String name = getStringOrNull(json.get("name")); // optional
+                    String title = getStringOrNull(json.get("title")); // optional
                     int followers = json.get("followers").getAsInt();
                     String country = getJson(json.get("country").getAsString()).get("name").getAsString();
-                    String location = optionalString(json.get("location")); // optional
+                    String location = getStringOrNull(json.get("location")); // optional
                     Date last_online = new Date(TimeUnit.SECONDS.toMillis(json.get("last_online").getAsLong()));
                     Date joined = new Date(TimeUnit.SECONDS.toMillis(json.get("joined").getAsLong()));
                     String status = json.get("status").getAsString();
                     boolean is_streamer = json.get("is_streamer").getAsBoolean();
-                    String twitch = optionalString(json.get("twitch_url")); // optional
+                    String twitch = getStringOrNull(json.get("twitch_url")); // optional
                     boolean verified = json.get("verified").getAsBoolean();
 
 
@@ -79,19 +79,19 @@ public class ChessComCommand extends AbstractCommand {
 
             JsonObject json = getJson("https://api.chess.com/pub/player/" + username);
             if (json != null) {
-                String avatar = optionalString(json.get("avatar")); // optional
+                String avatar = getStringOrNull(json.get("avatar")); // optional
                 long id = json.get("player_id").getAsLong();
                 String url = json.get("url").getAsString();
-                String name = optionalString(json.get("name")); // optional
-                String title = optionalString(json.get("title")); // optional
+                String name = getStringOrNull(json.get("name")); // optional
+                String title = getStringOrNull(json.get("title")); // optional
                 int followers = json.get("followers").getAsInt();
                 String country = getJson(json.get("country").getAsString()).get("name").getAsString();
-                String location = optionalString(json.get("location")); // optional
+                String location = getStringOrNull(json.get("location")); // optional
                 Date last_online = new Date(TimeUnit.SECONDS.toMillis(json.get("last_online").getAsLong()));
                 Date joined = new Date(TimeUnit.SECONDS.toMillis(json.get("joined").getAsLong()));
                 String status = json.get("status").getAsString();
                 boolean is_streamer = json.get("is_streamer").getAsBoolean();
-                String twitch = optionalString(json.get("twitch_url")); // optional
+                String twitch = getStringOrNull(json.get("twitch_url")); // optional
                 boolean verified = json.get("verified").getAsBoolean();
 
                 //https://api.chess.com/pub/player/yesntntnt/stats
@@ -156,7 +156,7 @@ public class ChessComCommand extends AbstractCommand {
     }
 
     @Override
-    public String getCategory() {
-        return CHESS;
+    public Category getCategory() {
+        return Category.CHESS;
     }
 }
